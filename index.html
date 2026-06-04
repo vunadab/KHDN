@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KPI KHDN">
+<meta name="theme-color" content="#080c14">
+<title>KPI KHDN · Nam A Bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#080c14; --bg1:#0d1422; --bg2:#111a2e; --bg3:#16213a; --bg4:#1c2a46;
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.12); --line3:rgba(255,255,255,.18);
+  --teal:#00d4b4; --teal2:#00f5d0; --teal-bg:rgba(0,212,180,.08); --teal-dim:rgba(0,212,180,.2);
+  --green:#22d3a0; --amber:#f59e0b; --red:#f43f5e; --blue:#3b82f6; --sky:#38bdf8; --violet:#8b5cf6;
+  --t1:#f0f4ff; --t2:#8492a6; --t3:#3d4f68;
+  --font:'DM Sans',system-ui,sans-serif; --mono:'DM Mono',monospace;
+  --sh:0 4px 20px rgba(0,0,0,.35);
+}
+body.light{
+  --bg:#f0f4fa; --bg1:#ffffff; --bg2:#f7f9fd; --bg3:#edf1f8; --bg4:#e3e9f3;
+  --line:rgba(0,40,100,.08); --line2:rgba(0,40,100,.14); --line3:rgba(0,40,100,.22);
+  --teal:#009d87; --teal2:#00b89e; --teal-bg:rgba(0,157,135,.08); --teal-dim:rgba(0,157,135,.2);
+  --green:#059669; --amber:#d97706; --red:#e11d48; --blue:#2563eb; --sky:#0284c7; --violet:#7c3aed;
+  --t1:#0f172a; --t2:#475569; --t3:#94a3b8;
+  --sh:0 4px 20px rgba(0,30,80,.10);
+}
+html,body{background:var(--bg);color:var(--t1);font-family:var(--font);min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
+button,input,select,textarea{font-family:var(--font);cursor:pointer}
+
+/* ── SHELL ── */
+#shell{max-width:430px;margin:0 auto;min-height:100vh;position:relative}
+
+/* ── LOADING ── */
+#loading{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}
+.ld{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── LOGIN ── */
+#login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{width:100%;max-width:320px;text-align:center}
+.login-logo{width:64px;height:64px;border-radius:18px;background:var(--teal-bg);border:1px solid var(--teal-dim);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.login-logo svg{width:40px;height:40px}
+.login-title{font-size:22px;font-weight:800;margin-bottom:6px}
+.login-sub{font-size:12px;color:var(--t2);margin-bottom:28px;line-height:1.7}
+.login-inp{width:100%;background:var(--bg1);border:1px solid var(--line2);border-radius:12px;padding:13px 15px;color:var(--t1);font-size:15px;outline:none;font-family:var(--font);margin-bottom:10px;-webkit-appearance:none;display:block;transition:border-color .18s}
+.login-inp:focus{border-color:var(--teal)}
+.login-inp::placeholder{color:var(--t3)}
+.login-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#080c14;font-weight:800;font-size:15px;margin-top:4px;transition:all .18s}
+body.light .login-btn{color:#fff}
+.login-btn:active{transform:scale(.98)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-err{color:var(--red);font-size:12px;font-weight:600;min-height:18px;margin-bottom:8px}
+
+/* ── PIN OVERLAY ── */
+#pin-overlay{position:fixed;inset:0;background:rgba(8,12,20,.94);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(16px)}
+body.light #pin-overlay{background:rgba(240,244,250,.92)}
+.pin-box{background:var(--bg2);border:1px solid var(--line2);border-radius:22px;padding:26px 20px;width:100%;max-width:290px;text-align:center}
+.pin-title{font-size:16px;font-weight:800;margin-bottom:4px}
+.pin-sub{font-size:11px;color:var(--t2);margin-bottom:16px}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.pin-dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--line2);transition:all .15s}
+.pin-dot.fill{background:var(--teal);border-color:var(--teal)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.pk{aspect-ratio:1;border-radius:12px;border:1px solid var(--line2);background:var(--bg3);color:var(--t1);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .1s}
+.pk:active{background:var(--teal-bg);border-color:var(--teal-dim);transform:scale(.95)}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--line);backdrop-filter:blur(20px)}
+body.light .hdr{background:rgba(240,244,250,.95)}
+.hdr-inner{padding:10px 14px 0}
+.hdr-top{display:flex;align-items:center;gap:9px}
+.logomark svg{width:30px;height:30px}
+.brand-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.brand-title em{background:linear-gradient(90deg,var(--teal),var(--teal2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-style:normal}
+.brand-sub{font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:5px;margin-left:auto}
+.ico-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line2);background:transparent;color:var(--t2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ico-btn:active{background:var(--bg3)}
+.teal-btn{padding:5px 10px;border-radius:8px;border:1px solid var(--teal-dim);background:var(--teal-bg);color:var(--teal);font-size:10.5px;font-weight:700;white-space:nowrap}
+.hdr-strip{display:flex;align-items:center;gap:5px;padding:6px 14px 8px;overflow-x:auto;scrollbar-width:none}
+.hdr-strip::-webkit-scrollbar{display:none}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:5px;font-size:9.5px;font-weight:600;white-space:nowrap;flex-shrink:0}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:100;background:var(--bg);border-top:1px solid var(--line);display:flex;padding:4px 0 calc(4px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(20px)}
+body.light .nav{background:rgba(240,244,250,.97)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 1px 3px;border:none;background:none;color:var(--t3);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;position:relative;transition:color .18s}
+.nb.on{color:var(--teal)}
+.nb-line{position:absolute;top:0;left:15%;width:70%;height:1.5px;background:linear-gradient(90deg,transparent,var(--teal),transparent);border-radius:1px;opacity:0;transition:opacity .18s}
+.nb.on .nb-line{opacity:1}
+.nb-ic{font-size:17px;line-height:1.15}
+.nb-dot{position:absolute;top:3px;right:calc(50% - 15px);width:14px;height:14px;border-radius:50%;background:var(--red);color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+
+/* ── PAGES ── */
+.page{display:none;padding-bottom:82px}
+.page.active{display:block;animation:pgIn .28s cubic-bezier(.4,0,.2,1)}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SECTION ── */
+.sec{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;padding:14px 14px 8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--line)}
+
+/* ── SCROLL TABS ── */
+.stabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:10px 14px}
+.stabs::-webkit-scrollbar{display:none}
+.stab{padding:6px 13px;border-radius:20px;border:1px solid var(--line2);background:transparent;color:var(--t2);font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.stab.on{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-dim)}
+
+/* ── DASHBOARD ── */
+.hero-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
+.hero-cell{background:var(--bg1);padding:11px 12px}
+body.light .hero-cell{background:#fff}
+.hc-lbl{font-size:8.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:3px}
+.hc-val{font-size:18px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em;line-height:1}
+.hc-pct{font-size:10px;font-weight:700;margin-top:3px}
+.hc-bar{height:2px;border-radius:1px;background:var(--line);margin-top:5px}
+.hc-fill{height:2px;border-radius:1px;transition:width .8s}
+
+.kpi-row{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:0 14px 4px}
+.kpi-row::-webkit-scrollbar{display:none}
+.kc{flex-shrink:0;width:152px;background:var(--bg1);border-radius:13px;padding:13px;border:1px solid var(--line);position:relative;overflow:hidden}
+body.light .kc{box-shadow:0 2px 10px rgba(0,30,80,.07)}
+.kc-top{height:2px;border-radius:13px 13px 0 0;position:absolute;top:0;left:0;right:0}
+.kc-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:8px}
+.kc-lbl{font-size:9.5px;color:var(--t2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.kc-val{font-size:19px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em;line-height:1}
+.kc-kh{font-size:9.5px;color:var(--t3);margin:3px 0 7px}
+.kc-bar{height:3px;border-radius:2px;background:var(--line)}
+.kc-fill{height:3px;border-radius:2px;transition:width .8s}
+.kc-pct{font-size:11px;font-weight:800;text-align:right;margin-top:4px}
+
+.rtable{padding:0 14px}
+.rth{display:grid;grid-template-columns:24px 1fr 48px 48px 52px;gap:5px;padding:5px 8px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--line)}
+.rtr{display:grid;grid-template-columns:24px 1fr 48px 48px 52px;gap:5px;padding:9px 8px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s;align-items:center}
+.rtr:active{background:var(--bg2)}
+.rn{font-size:11px;font-weight:800;color:var(--t3);font-family:var(--mono);text-align:center}
+.rav{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.rname-w{display:flex;align-items:center;gap:7px}
+.rname{font-size:12px;font-weight:600;line-height:1.3}
+.rsub{font-size:9.5px;color:var(--t2);margin-top:1px}
+.rcell{font-size:12px;font-weight:700;font-family:var(--mono);text-align:right}
+
+.widget{background:var(--bg1);border-radius:14px;border:1px solid var(--line);margin:0 14px 10px;overflow:hidden}
+body.light .widget{box-shadow:0 2px 10px rgba(0,30,80,.07)}
+.wh{display:flex;align-items:center;justify-content:space-between;padding:11px 13px 0}
+.wt{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.07em}
+.wb{padding:9px 13px 12px}
+.spark-group{margin-bottom:8px}
+.spark-bars{display:flex;gap:3px;align-items:flex-end;height:34px;margin:4px 0 2px}
+.spark-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px}
+.spark-lbls{display:flex;gap:3px}
+.spark-lbl{flex:1;font-size:7.5px;color:var(--t3);text-align:center;font-weight:600}
+.fc-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
+.fc-row:first-child{border-top:none}
+.fc-ic{font-size:12px;width:17px}
+.fc-track{flex:1;height:17px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.fc-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:9px;font-weight:700;color:rgba(255,255,255,.9);transition:width .9s}
+body.light .fc-fill{color:rgba(0,0,0,.65)}
+.fc-pct{font-size:10.5px;font-weight:800;font-family:var(--mono);width:36px;text-align:right;flex-shrink:0}
+
+/* ── NV LIST / FORM ── */
+.nv-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s}
+.nv-row:active{background:var(--bg2)}
+.nv-av{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
+.nv-name{font-size:13px;font-weight:700}
+.nv-sub{font-size:10.5px;color:var(--t2);margin-top:2px}
+.chip-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.chip{padding:2px 7px;border-radius:5px;font-size:9.5px;font-weight:700;border:1px solid;white-space:nowrap}
+.stat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ff{padding:12px 14px;border-bottom:1px solid var(--line);background:var(--bg1)}
+body.light .ff{background:#fff}
+.ff-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ff-left{display:flex;align-items:center;gap:9px}
+.ff-ic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ff-lbl{font-size:12px;font-weight:700}
+.ff-kh{font-size:10px;color:var(--t2)}
+.ff-pct{font-size:13px;font-weight:800;font-family:var(--mono)}
+.fi{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:9px;padding:10px 12px;color:var(--t1);font-size:16px;font-weight:600;outline:none;font-family:var(--mono);transition:border-color .18s;-webkit-appearance:none}
+body.light .fi{background:var(--bg3)}
+.fi:focus{border-color:var(--teal)}
+.fi::placeholder{color:var(--t3)}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+.ft{height:3px;background:var(--line);border-radius:2px;margin-top:7px}
+.ft-fill{height:3px;border-radius:2px;transition:width .4s}
+.save-bar{padding:11px 14px;background:var(--bg);border-top:1px solid var(--line);backdrop-filter:blur(12px)}
+body.light .save-bar{background:rgba(240,244,250,.97)}
+.btn-p{width:100%;padding:13px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#060d0b;font-weight:800;font-size:14px;box-shadow:0 4px 16px rgba(0,212,180,.2);transition:all .18s;font-family:var(--font)}
+body.light .btn-p{color:#fff}
+.btn-p:active{transform:scale(.98)}
+.btn-back{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--t2);font-size:12px;font-weight:600;padding:11px 14px;border-bottom:1px solid var(--line);width:100%}
+
+/* ── PIPELINE ── */
+.pl-block{margin:0 14px 10px}
+.pl-s-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:10px 10px 0 0;border:1px solid var(--line);border-bottom:none}
+.pl-deals{border:1px solid var(--line);border-radius:0 0 10px 10px;overflow:hidden}
+.pl-deal{display:flex;align-items:center;gap:9px;padding:9px 12px;border-top:1px solid var(--line);cursor:pointer;transition:background .12s}
+.pl-deal:first-child{border-top:none}
+.pl-deal:active{background:var(--bg2)}
+.pl-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* ── ALERT ── */
+.al-item{margin:0 14px 8px;border-radius:12px;background:var(--bg1);border:1px solid var(--line);overflow:hidden}
+body.light .al-item{box-shadow:0 2px 8px rgba(0,30,80,.07)}
+.al-hdr{display:flex;align-items:center;gap:10px;padding:10px 13px;border-left:3px solid}
+.al-body{padding:0 13px 10px}
+.al-nv{display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid var(--line);font-size:12px}
+
+/* ── STAR ── */
+.star-hero{margin:0 14px 10px;border-radius:16px;background:var(--bg1);border:1px solid var(--line);overflow:hidden;position:relative}
+body.light .star-hero{box-shadow:0 3px 14px rgba(0,30,80,.1)}
+.sh-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 25% 50%,var(--teal-bg),transparent 60%);pointer-events:none}
+.sh-top{display:flex;align-items:center;gap:10px;padding:14px 14px 0}
+.sh-info{padding:4px 14px 12px}
+.sh-label{font-size:9px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.sh-name{font-size:20px;font-weight:800;line-height:1.1}
+.sh-score{font-size:12px;color:var(--t2);margin-top:4px}
+.sh-score b{color:var(--teal);font-family:var(--mono)}
+.sh-kpis{display:flex;gap:7px;padding:11px 14px;border-top:1px solid var(--line)}
+.sk-item{flex:1;text-align:center;padding:9px 5px;border-radius:9px;background:var(--bg2);border:1px solid var(--line)}
+body.light .sk-item{background:var(--bg3)}
+.sk-icon{font-size:13px;margin-bottom:3px}
+.sk-val{font-size:12px;font-weight:700;font-family:var(--mono)}
+.sk-lbl{font-size:8px;color:var(--t2);margin-top:2px}
+.sk-pct{font-size:10px;font-weight:800;margin-top:3px}
+.t3-row{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .12s}
+.t3-row:active{background:var(--bg2)}
+
+/* ── BỘ KPIS ── */
+.bk-info{margin:0 14px 10px;padding:10px 12px;background:var(--teal-bg);border:1px solid var(--teal-dim);border-radius:11px;font-size:11px;color:var(--teal);line-height:1.6}
+.bk-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:0 14px 12px}
+.bk-sum-cell{background:var(--bg1);border-radius:10px;border:1px solid var(--line);padding:9px;text-align:center}
+body.light .bk-sum-cell{box-shadow:0 1px 6px rgba(0,30,80,.07)}
+.bk-sum-num{font-size:17px;font-weight:800;font-family:var(--mono)}
+.bk-sum-lbl{font-size:9px;color:var(--t3);margin-top:2px;font-weight:600}
+.bk-list{padding:0 14px}
+.bk-ghdr{display:flex;align-items:center;gap:7px;padding:10px 0 6px;font-size:9.5px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;border-bottom:1px solid var(--line);margin-bottom:6px}
+.bk-item{background:var(--bg1);border:1px solid var(--line);border-radius:12px;margin-bottom:7px;overflow:hidden}
+body.light .bk-item{box-shadow:0 1px 6px rgba(0,30,80,.07)}
+.bk-item-top{display:flex;align-items:center;gap:10px;padding:11px 12px}
+.bk-drag{font-size:14px;color:var(--t3);cursor:grab;flex-shrink:0;user-select:none}
+.bk-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.bk-main{flex:1;min-width:0}
+.bk-name{font-size:13px;font-weight:700}
+.bk-meta{font-size:10px;color:var(--t2);margin-top:1px}
+.bk-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.star-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--line2);background:transparent;font-size:14px;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.star-btn.starred{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3)}
+.sw{position:relative;width:36px;height:20px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw-slider{position:absolute;inset:0;background:var(--line2);border-radius:20px;cursor:pointer;transition:.2s}
+.sw-slider:before{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;left:3px;top:3px;transition:.2s}
+.sw input:checked+.sw-slider{background:var(--teal)}
+.sw input:checked+.sw-slider:before{transform:translateX(16px)}
+.bk-weight{border-top:1px solid var(--line);padding:9px 12px;display:flex;align-items:center;gap:10px;background:var(--bg2)}
+body.light .bk-weight{background:var(--bg3)}
+.bk-w-lbl{font-size:10px;color:var(--t2);font-weight:600;width:52px;flex-shrink:0}
+.bk-w-slider{flex:1;height:4px;border-radius:2px;outline:none;-webkit-appearance:none;cursor:pointer;background:linear-gradient(90deg,var(--teal) var(--pct,50%),var(--line2) var(--pct,50%))}
+.bk-w-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px var(--teal-bg),0 2px 6px rgba(0,0,0,.3);cursor:pointer}
+.bk-w-val{font-size:13px;font-weight:800;font-family:var(--mono);color:var(--teal);width:34px;text-align:right}
+.bk-w-badge{font-size:9px;color:var(--t3);font-weight:600;padding:2px 6px;border-radius:4px;background:var(--bg);border:1px solid var(--line);white-space:nowrap}
+body.light .bk-w-badge{background:var(--bg3)}
+.bk-item-actions{display:flex;gap:5px;padding:6px 12px 8px;border-top:1px solid var(--line)}
+.bk-act-btn{flex:1;padding:5px;border-radius:7px;font-size:10.5px;font-weight:700;font-family:var(--font)}
+.bk-add-form{background:var(--bg1);border:1px dashed var(--line2);border-radius:12px;padding:13px;margin-bottom:8px}
+body.light .bk-add-form{box-shadow:0 1px 6px rgba(0,30,80,.06)}
+.bk-add-title{font-size:11px;font-weight:700;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.bk-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px}
+.bk-label{font-size:9.5px;font-weight:600;color:var(--t2);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.04em}
+.bk-fi{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:9px 10px;color:var(--t1);font-size:13px;font-weight:600;outline:none;font-family:var(--font);transition:border-color .15s;-webkit-appearance:none}
+body.light .bk-fi{background:var(--bg2)}
+.bk-fi:focus{border-color:var(--teal)}
+.bk-icon-grid{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.bk-icon-opt{width:34px;height:34px;border-radius:8px;border:1px solid var(--line2);background:transparent;font-size:17px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center}
+.bk-icon-opt.on{border-color:var(--teal);background:var(--teal-bg)}
+.kh-tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:10px 14px}
+.kh-tabs::-webkit-scrollbar{display:none}
+.kh-tab{padding:6px 13px;border-radius:20px;border:1px solid var(--line2);background:transparent;color:var(--t2);font-size:11px;font-weight:600;white-space:nowrap;flex-shrink:0;transition:all .15s;font-family:var(--font)}
+.kh-tab.on{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-dim)}
+
+/* ── ZALO SHEET ── */
+#zalo-overlay{position:fixed;inset:0;background:rgba(8,12,20,.85);z-index:400;display:none;align-items:flex-end;backdrop-filter:blur(10px)}
+body.light #zalo-overlay{background:rgba(240,244,250,.8)}
+.zalo-sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:430px;margin:0 auto;padding:0 0 env(safe-area-inset-bottom,16px);border-top:1px solid var(--line2)}
+.zalo-handle{width:34px;height:4px;background:var(--line2);border-radius:2px;margin:10px auto 0}
+.zalo-title{font-size:15px;font-weight:800;padding:14px 16px 4px}
+.zalo-msg{background:var(--bg);border-radius:10px;padding:12px;font-size:11.5px;color:var(--t2);line-height:1.75;white-space:pre-wrap;font-family:var(--mono);max-height:220px;overflow-y:auto;margin:0 14px;border:1px solid var(--line)}
+body.light .zalo-msg{background:var(--bg3)}
+.zalo-actions{display:flex;gap:8px;padding:12px 14px 4px}
+
+/* ── MISC ── */
+.empty{text-align:center;padding:28px 16px;color:var(--t3);font-size:13px}
+.online-dot{width:5px;height:5px;border-radius:50%;display:inline-block}
+</style>
+</head>
+<body>
+<div id="shell">
+
+<!-- ══ LOADING ══ -->
+<div id="loading">
+  <div class="ld"></div>
+  <div style="font-size:13px;color:var(--t2)">Đang kết nối...</div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg viewBox="0 0 40 40" fill="none">
+        <polygon points="20,3 37,12 37,28 20,37 3,28 3,12" fill="var(--teal-bg)" stroke="var(--teal-dim)" stroke-width="1.5"/>
+        <text x="20" y="26" text-anchor="middle" font-size="13" font-weight="800" fill="var(--teal)" font-family="DM Sans,sans-serif">DN</text>
+      </svg>
+    </div>
+    <div class="login-title">KPI <span style="background:linear-gradient(90deg,var(--teal),var(--teal2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">KHDN</span></div>
+    <div class="login-sub">Nam A Bank · Phòng KHDN<br>Hệ thống nội bộ — Chỉ dành cho nhân viên</div>
+    <div class="login-err" id="login-err"></div>
+    <input class="login-inp" id="login-email" type="email" placeholder="Email đăng nhập" autocomplete="email">
+    <input class="login-inp" id="login-pw" type="password" placeholder="Mật khẩu" autocomplete="current-password">
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Đăng nhập</button>
+    <div id="login-spin" style="display:none;color:var(--t2);font-size:12px;margin-top:10px">Đang xử lý...</div>
+  </div>
+</div>
+
+<!-- ══ PIN OVERLAY (Trưởng phòng) ══ -->
+<div id="pin-overlay">
+  <div class="pin-box">
+    <div class="pin-title">🔐 Xác thực Trưởng phòng</div>
+    <div class="pin-sub" id="pin-sub">Nhập PIN để tiếp tục</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pk" onclick="pinKey('1')">1</button><button class="pk" onclick="pinKey('2')">2</button><button class="pk" onclick="pinKey('3')">3</button>
+      <button class="pk" onclick="pinKey('4')">4</button><button class="pk" onclick="pinKey('5')">5</button><button class="pk" onclick="pinKey('6')">6</button>
+      <button class="pk" onclick="pinKey('7')">7</button><button class="pk" onclick="pinKey('8')">8</button><button class="pk" onclick="pinKey('9')">9</button>
+      <button class="pk" onclick="pinCancel()" style="font-size:13px">Huỷ</button><button class="pk" onclick="pinKey('0')">0</button><button class="pk" onclick="pinDel()">⌫</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ZALO OVERLAY ══ -->
+<div id="zalo-overlay" onclick="if(event.target===this)closeZalo()">
+  <div class="zalo-sheet">
+    <div class="zalo-handle"></div>
+    <div class="zalo-title">📤 Chia sẻ qua Zalo</div>
+    <div style="padding:4px 14px 8px">
+      <div class="stabs" style="padding:0 0 8px" id="zaloTypeTabs">
+        <button class="stab on" onclick="setZaloType(this,'phong')">🏢 Toàn phòng</button>
+        <button class="stab" onclick="setZaloType(this,'canhan')">👤 Cá nhân</button>
+      </div>
+      <div id="zaloNVSel" style="display:none;margin-bottom:8px">
+        <select id="zalo-nv-sel" class="bk-fi" onchange="buildZaloCanhan(this.value)" style="appearance:none"></select>
+      </div>
+      <div class="stabs" style="padding:0 0 8px" id="zaloScopeTabs">
+        <button class="stab on" onclick="setZaloScope(this,'thang')">Cả tháng</button>
+        <button class="stab" onclick="setZaloScope(this,'T1')">T1</button>
+        <button class="stab" onclick="setZaloScope(this,'T2')">T2</button>
+        <button class="stab" onclick="setZaloScope(this,'T3')">T3</button>
+        <button class="stab" onclick="setZaloScope(this,'T4')">T4</button>
+      </div>
+    </div>
+    <div class="zalo-msg" id="zalo-msg"></div>
+    <div class="zalo-actions">
+      <button onclick="copyZalo()" id="zalo-copy-btn" style="flex:1;background:linear-gradient(135deg,#0068ff,#3b9eff);color:#fff;border:none;border-radius:10px;padding:12px;font-weight:800;font-size:14px;font-family:var(--font)">📋 Copy</button>
+      <button onclick="closeZalo()" style="background:transparent;border:1px solid var(--line2);border-radius:10px;padding:12px 14px;color:var(--t2);font-weight:700;font-size:13px;font-family:var(--font)">✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP (shown after login) ══ -->
+<div id="app" style="display:none">
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-top">
+      <div class="logomark">
+        <svg viewBox="0 0 30 30" fill="none">
+          <polygon points="15,2 28,9 28,21 15,28 2,21 2,9" fill="var(--teal-bg)" stroke="var(--teal-dim)" stroke-width="1.2"/>
+          <text x="15" y="20" text-anchor="middle" font-size="10" font-weight="800" fill="var(--teal)" font-family="DM Sans,sans-serif">DN</text>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-title">KPI <em>KHDN</em></div>
+        <div class="brand-sub">Nam A Bank · Enterprise</div>
+      </div>
+      <div class="hdr-right">
+        <button class="teal-btn" onclick="openExport()">↑ PDF</button>
+        <button class="ico-btn" onclick="openZalo()">⇪</button>
+        <button class="ico-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
+        <button class="ico-btn" onclick="doSignOut()" title="Đăng xuất" style="font-size:12px">↩</button>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-strip">
+    <span class="badge" id="onlineBadge" style="background:rgba(34,211,160,.1);color:var(--green);border:1px solid rgba(34,211,160,.2)"><span class="online-dot" style="background:var(--green)"></span>Online</span>
+    <span class="badge" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-dim)" id="badgeMonth"></span>
+    <span class="badge" style="background:var(--bg3);color:var(--t2);border:1px solid var(--line2)" id="badgeTuan"></span>
+    <span class="badge" style="background:var(--bg3);color:var(--t3);border:1px solid var(--line)" id="badgeDate"></span>
+    <span class="badge" style="background:rgba(244,63,94,.08);color:var(--red);border:1px solid rgba(244,63,94,.2)" id="alertBadge" style="display:none"></span>
+  </div>
+</header>
+
+<!-- PAGES -->
+<main>
+
+<!-- DASHBOARD -->
+<section class="page active" id="pg-dash">
+  <div class="stabs" id="scopeTabs">
+    <button class="stab on" onclick="setScope(this,'thang')">Cả tháng</button>
+    <button class="stab" onclick="setScope(this,'T1')">Tuần 1</button>
+    <button class="stab" onclick="setScope(this,'T2')">Tuần 2</button>
+    <button class="stab" onclick="setScope(this,'T3')">Tuần 3</button>
+    <button class="stab" onclick="setScope(this,'T4')">Tuần 4</button>
+  </div>
+  <div class="hero-row" id="heroRow"></div>
+  <div class="sec">Tất cả chỉ tiêu</div>
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="sec">Tiến độ tuần</div>
+  <div class="widget"><div class="wb" id="sparkW"></div></div>
+  <div class="sec">Dự báo Pipeline</div>
+  <div class="widget">
+    <div class="wh"><span class="wt">Xác suất đạt từ deals</span><button onclick="setTab('pipeline')" style="font-size:10px;color:var(--teal);background:none;border:none;font-weight:700">Xem →</button></div>
+    <div class="wb" id="fcW"></div>
+  </div>
+  <div class="sec">Xếp hạng nhân viên</div>
+  <div class="rtable">
+    <div class="rth"><div></div><div>Nhân viên</div><div style="text-align:right">Dư nợ</div><div style="text-align:right">Huy động</div><div style="text-align:right">Điểm</div></div>
+    <div id="rankRows"></div>
+  </div>
+</section>
+
+<!-- NHẬP TH LIST -->
+<section class="page" id="pg-nhap">
+  <div class="stabs" id="tuanTabs">
+    <button class="stab" onclick="setTuan(this,'T1')">Tuần 1</button>
+    <button class="stab on" onclick="setTuan(this,'T2')">Tuần 2</button>
+    <button class="stab" onclick="setTuan(this,'T3')">Tuần 3</button>
+    <button class="stab" onclick="setTuan(this,'T4')">Tuần 4</button>
+  </div>
+  <div class="sec">Chọn nhân viên</div>
+  <div id="nvList"></div>
+</section>
+
+<!-- NHẬP FORM -->
+<section class="page" id="pg-nhap-form">
+  <button class="btn-back" onclick="setTab('nhap')">← Danh sách</button>
+  <div id="nhapForm"></div>
+  <div class="save-bar">
+    <button class="btn-p" id="btnSaveTH" onclick="saveTH()">Lưu kết quả</button>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="page" id="pg-pipeline">
+  <div class="stabs" id="plTabs">
+    <button class="stab on" onclick="setPlTab(this,'nv')">Theo NV</button>
+    <button class="stab" onclick="setPlTab(this,'phong')">Toàn phòng</button>
+  </div>
+  <div id="plContent"></div>
+</section>
+
+<!-- PIPELINE FORM -->
+<section class="page" id="pg-pl-form">
+  <button class="btn-back" onclick="setTab('pipeline')">← Pipeline</button>
+  <div id="plForm"></div>
+  <div class="save-bar">
+    <button class="btn-p" onclick="saveDeal()">Lưu Deal</button>
+  </div>
+</section>
+
+<!-- CẢNH BÁO -->
+<section class="page" id="pg-alert">
+  <div class="sec" style="padding-top:14px">Cảnh báo</div>
+  <div id="alertContent"></div>
+</section>
+
+<!-- TUYÊN DƯƠNG -->
+<section class="page" id="pg-star">
+  <div class="stabs" id="starTabs">
+    <button class="stab on" onclick="setStarScope(this,'thang')">Cả tháng</button>
+    <button class="stab" onclick="setStarScope(this,'T1')">T1</button>
+    <button class="stab" onclick="setStarScope(this,'T2')">T2</button>
+    <button class="stab" onclick="setStarScope(this,'T3')">T3</button>
+    <button class="stab" onclick="setStarScope(this,'T4')">T4</button>
+  </div>
+  <div id="starContent"></div>
+</section>
+
+<!-- GIAO KH -->
+<section class="page" id="pg-kh">
+  <div class="kh-tabs" id="khTabs">
+    <button class="kh-tab on" onclick="setKhTab(this,'phong')">📋 KH Phòng</button>
+    <button class="kh-tab" onclick="setKhTab(this,'tuan')">👤 KH NV</button>
+    <button class="kh-tab" onclick="setKhTab(this,'bkpi')">⭐ Bộ KPIs</button>
+    <button class="kh-tab" onclick="setKhTab(this,'dsnv')">⚙ DS NV</button>
+  </div>
+  <div style="margin:0 14px 10px;padding:9px 12px;background:var(--teal-bg);border:1px solid var(--teal-dim);border-radius:10px;display:flex;align-items:center;gap:9px">
+    <span>🔐</span>
+    <div style="flex:1"><div style="font-size:12px;font-weight:700">Chế độ Trưởng phòng</div><div style="font-size:10px;color:var(--t2);margin-top:1px">Tổng 4 tuần ≤ KH tháng</div></div>
+    <span id="pinStatus" style="font-size:12px;font-weight:700;color:var(--t3)">Chưa xác thực</span>
+  </div>
+  <div id="khContent"></div>
+</section>
+
+</main>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nb" id="nb-nhap"     onclick="setTab('nhap')">    <div class="nb-line"></div><span class="nb-ic">✏️</span>Nhập</button>
+  <button class="nb" id="nb-pipeline" onclick="setTab('pipeline')"><div class="nb-line"></div><span class="nb-ic">📋</span>Pipeline</button>
+  <button class="nb on" id="nb-dash"  onclick="setTab('dash')">    <div class="nb-line"></div><span class="nb-ic">◈</span>Dashboard</button>
+  <button class="nb" id="nb-alert"    onclick="setTab('alert')">   <div class="nb-line"></div><span class="nb-ic">🔔</span>Cảnh báo<div class="nb-dot" id="alertDot" style="display:none">!</div></button>
+  <button class="nb" id="nb-star"     onclick="setTab('star')">    <div class="nb-line"></div><span class="nb-ic">★</span>Tuyên dương</button>
+  <button class="nb" id="nb-kh"       onclick="reqPin('kh')">      <div class="nb-line"></div><span class="nb-ic">🎯</span>Giao KH</button>
+</nav>
+
+</div><!-- #app -->
+</div><!-- #shell -->
+
+<!-- ══════════ FIREBASE + APP LOGIC ══════════ -->
+<script type="module">
+// ════════════════════════════════════════════
+// FIREBASE — PROJECT: kpi-khdn (RIÊNG BIỆT)
+// Database: kpi-khdn-default-rtdb.asia-southeast1
+// Sender:   353868481017
+// ════════════════════════════════════════════
+import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword,
+         onAuthStateChanged, signOut }            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, get, set, push,
+         onValue, serverTimestamp }               from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const FB_CONFIG = {
+  apiKey:            "AIzaSyAFztNEYSCZCig1FQPCsz8abcgtHcN6KXc",
+  authDomain:        "kpi-khdn.firebaseapp.com",
+  databaseURL:       "https://kpi-khdn-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "kpi-khdn",
+  storageBucket:     "kpi-khdn.firebasestorage.app",
+  messagingSenderId: "353868481017",
+  appId:             "1:353868481017:web:8f5458d533c0b32c727d28"
+};
+
+const app  = initializeApp(FB_CONFIG);
+const auth = getAuth(app);
+const db   = getDatabase(app);
+
+// ════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════
+const fbGet = async (path) => { try { const s = await get(ref(db,path)); return s.exists()?s.val():null; } catch(e){ return null; }};
+const fbSet = async (path,val) => { try { await set(ref(db,path),val); return true; } catch(e){ return false; }};
+const fbPush = async (path,val) => { try { const r = await push(ref(db,path),val); return r.key; } catch(e){ return null; }};
+
+function fmt(v,u){ return isNaN(v)?'—':parseFloat(v).toLocaleString('vi-VN')+(u?' '+u:''); }
+function pct(v,kh){ return kh>0?Math.round(v/kh*100):null; }
+function pCol(p){ if(p===null)return'var(--t3)'; if(p>=100)return'var(--green)'; if(p>=70)return'var(--amber)'; if(p>=40)return'#f97316'; return'var(--red)'; }
+function stL(p){ if(p===null)return'—'; if(p>=100)return'✅ Đạt'; if(p>=70)return'⚡ Tốt'; if(p>=40)return'⚠ TB'; return'🚨 Yếu'; }
+
+const CUR_M = (()=>{ const d=new Date(); return d.getFullYear()+'_'+(d.getMonth()+1).toString().padStart(2,'0'); })();
+const CUR_T = (()=>{ const d=new Date().getDate(); return d<=7?'T1':d<=14?'T2':d<=21?'T3':'T4'; })();
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+const S = {
+  tab:'dash', scope:'thang', tuan:CUR_T,
+  plTab:'nv', plNV:null, editDealId:null,
+  starScope:'thang', khTab:'phong',
+  dark:true, pinOk:false, pendingTab:null,
+  zaloType:'phong', zaloScope:'thang',
+  formNV:null,
+  khPhong:{}, khTuan:{}, thTuan:{}, pipeline:{},
+  online:false,
+};
+
+// Bộ KPIs — chỉ tiêu chính + bán chéo
+let KPIS = [
+  {key:'du_no_dn',   lbl:'Dư Nợ DN',     icon:'🏦',unit:'tr đ',group:'main', star:true, color:'#00d4b4',kh:30000,w:1.5},
+  {key:'huy_dong_dn',lbl:'Huy Động DN',  icon:'💰',unit:'tr đ',group:'main', star:true, color:'#f59e0b',kh:20000,w:1.0},
+  {key:'phi_dv',     lbl:'Phí Dịch Vụ',  icon:'💼',unit:'tr đ',group:'main', star:true, color:'#3b82f6',kh:500,  w:0.8},
+  {key:'ttqt',       lbl:'TTQT',          icon:'🌐',unit:'USD', group:'main', star:true, color:'#38bdf8',kh:200000,w:1.2},
+  {key:'bao_lanh',   lbl:'Bảo Lãnh',     icon:'🛡️',unit:'tr đ',group:'cross',star:false,color:'#f97316',kh:5000, w:0.6},
+  {key:'hd_cn',      lbl:'Huy Động CN',  icon:'👤',unit:'tr đ',group:'cross',star:false,color:'#22d3a0',kh:10000,w:0.5},
+  {key:'the_td',     lbl:'Thẻ Tín Dụng', icon:'💳',unit:'thẻ', group:'cross',star:false,color:'#ec4899',kh:10,   w:0.4},
+];
+let NVS = [];
+const PL_STAGES = [
+  {k:'tiep_can', lbl:'Tiếp cận',      col:'#f59e0b'},
+  {k:'tu_van',   lbl:'Tư vấn',        col:'#3b82f6'},
+  {k:'de_xuat',  lbl:'Đề xuất',       col:'#f97316'},
+  {k:'tham_dinh',lbl:'Thẩm định',     col:'#f43f5e'},
+  {k:'xu_ly',    lbl:'Xử lý',         col:'#8b5cf6'},
+  {k:'phe_duyet',lbl:'Phê duyệt',     col:'#94a3b8'},
+  {k:'cho_gn',   lbl:'Chờ giải ngân', col:'#38bdf8'},
+  {k:'hoan_tat', lbl:'Hoàn tất',      col:'#22d3a0'},
+];
+const PIN_CORRECT = '1234'; // Trưởng phòng thay đổi trong Firebase config
+
+// ════════════════════════════════════════════
+// FIREBASE DATA ACCESS
+// ════════════════════════════════════════════
+function gKP(m){ return S.khPhong[m||CUR_M]||{}; }
+function gKT(m,t,ma){ return ((S.khTuan[m||CUR_M]||{})[t]||{})[ma]||{}; }
+function gTH(m,t,ma){ return ((S.thTuan[m||CUR_M]||{})[t]||{})[ma]||{}; }
+function gPL(m,ma){ return ((S.pipeline[m||CUR_M]||{})[ma])||{}; }
+
+async function loadAll(){
+  const [kp,kt,th,pl,nvs,kpis,cfg] = await Promise.all([
+    fbGet('khPhong/'+CUR_M), fbGet('khTuan/'+CUR_M),
+    fbGet('thTuan/'+CUR_M),  fbGet('pipeline/'+CUR_M),
+    fbGet('config/nvs'),     fbGet('config/kpis'),
+    fbGet('config/settings'),
+  ]);
+  if(kp) S.khPhong[CUR_M]=kp;
+  if(kt) S.khTuan[CUR_M]=kt;
+  if(th) S.thTuan[CUR_M]=th;
+  if(pl) S.pipeline[CUR_M]=pl;
+  if(nvs && Array.isArray(nvs) && nvs.length) NVS=nvs;
+  if(kpis && Array.isArray(kpis) && kpis.length) KPIS=kpis;
+  S.online=!!(kp||kt||th||pl);
+  updateOnlineBadge();
+}
+
+// ════════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════════
+onAuthStateChanged(auth, async user => {
+  document.getElementById('loading').style.display='none';
+  if(user){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    await loadAll();
+    if(!NVS.length) NVS=[
+      {ma:'nv001',ten:'DƯƠNG THÙY LINH',   col:'#00d4b4'},
+      {ma:'nv002',ten:'NGUYỄN VĂN MINH TIẾN',col:'#8b5cf6'},
+      {ma:'nv003',ten:'LÊ THỊ DẠ LY',       col:'#f59e0b'},
+    ];
+    updateHeader();
+    renderDash(); renderNhap(); renderPipeline(); renderStar(); renderAlerts();
+  } else {
+    document.getElementById('login-screen').style.display='flex';
+  }
+});
+
+window.doLogin = async function(){
+  const em=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-pw').value;
+  const err=document.getElementById('login-err');
+  const btn=document.getElementById('login-btn');
+  if(!em||!pw){err.textContent='Vui lòng nhập đầy đủ';return;}
+  btn.disabled=true;
+  document.getElementById('login-spin').style.display='block';
+  err.textContent='';
+  try{
+    await signInWithEmailAndPassword(auth,em,pw);
+  } catch(e){
+    err.textContent=e.code==='auth/invalid-credential'?'Email hoặc mật khẩu không đúng':'Lỗi: '+e.message;
+    btn.disabled=false;
+    document.getElementById('login-spin').style.display='none';
+  }
+};
+window.doSignOut = async function(){
+  if(confirm('Đăng xuất?')){ await signOut(auth); location.reload(); }
+};
+
+// ════════════════════════════════════════════
+// PIN
+// ════════════════════════════════════════════
+let pinBuf='';
+window.reqPin = function(targetTab){
+  if(S.pinOk){ setTab(targetTab); return; }
+  S.pendingTab=targetTab;
+  pinBuf='';
+  updatePinDots();
+  document.getElementById('pin-sub').textContent='Nhập PIN Trưởng phòng';
+  document.getElementById('pin-overlay').style.display='flex';
+};
+window.pinKey = function(k){
+  if(pinBuf.length>=4)return;
+  pinBuf+=k;
+  updatePinDots();
+  if(pinBuf.length===4){
+    setTimeout(()=>{
+      if(pinBuf===PIN_CORRECT){
+        S.pinOk=true;
+        document.getElementById('pin-overlay').style.display='none';
+        document.getElementById('pinStatus').textContent='✓ Đã xác thực';
+        document.getElementById('pinStatus').style.color='var(--green)';
+        if(S.pendingTab) setTab(S.pendingTab);
+      } else {
+        document.getElementById('pin-sub').textContent='❌ PIN sai — thử lại';
+        pinBuf='';updatePinDots();
+      }
+    },200);
+  }
+};
+window.pinDel=function(){ pinBuf=pinBuf.slice(0,-1); updatePinDots(); };
+window.pinCancel=function(){ document.getElementById('pin-overlay').style.display='none'; };
+function updatePinDots(){
+  for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.toggle('fill',i<pinBuf.length);
+}
+
+// ════════════════════════════════════════════
+// HEADER / THEME
+// ════════════════════════════════════════════
+function updateHeader(){
+  const now=new Date();
+  const months=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  document.getElementById('badgeMonth').textContent=months[now.getMonth()]+'/'+now.getFullYear();
+  document.getElementById('badgeTuan').textContent='Tuần '+CUR_T;
+  document.getElementById('badgeDate').textContent=now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear().toString().slice(-2);
+}
+function updateOnlineBadge(){
+  const b=document.getElementById('onlineBadge');
+  if(b){
+    b.innerHTML=S.online
+      ?'<span class="online-dot" style="background:var(--green)"></span>Online'
+      :'<span class="online-dot" style="background:var(--amber)"></span>Offline';
+    b.style.color=S.online?'var(--green)':'var(--amber)';
+  }
+}
+window.toggleTheme=function(){
+  S.dark=!S.dark;
+  document.body.classList.toggle('light',!S.dark);
+  document.getElementById('themeBtn').textContent=S.dark?'☀':'🌙';
+};
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+window.setTab=function(t){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('pg-'+t); if(pg)pg.classList.add('active');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  const nb=document.getElementById('nb-'+t); if(nb)nb.classList.add('on');
+  S.tab=t;
+  ({dash:renderDash,nhap:renderNhap,pipeline:renderPipeline,star:renderStar,alert:renderAlerts,kh:renderKH}[t]||function(){})();
+};
+window.setScope=function(btn,sc){ btn.closest('.stabs').querySelectorAll('.stab').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); S.scope=sc; renderDash(); };
+window.setTuan=function(btn,t){ btn.closest('.stabs').querySelectorAll('.stab').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); S.tuan=t; renderNhap(); };
+window.setPlTab=function(btn,t){ btn.closest('.stabs').querySelectorAll('.stab').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); S.plTab=t; renderPipeline(); };
+window.setStarScope=function(btn,sc){ btn.closest('.stabs').querySelectorAll('.stab').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); S.starScope=sc; renderStar(); };
+window.setKhTab=function(btn,t){ document.querySelectorAll('#khTabs .kh-tab').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); S.khTab=t; renderKH(); };
+
+// ════════════════════════════════════════════
+// HELPERS: scope, tính điểm
+// ════════════════════════════════════════════
+function scopeWks(sc){ return (sc||S.scope)==='thang'?['T1','T2','T3','T4']:[(sc||S.scope)]; }
+function khFor(k,sc){ return (sc||S.scope)==='thang'?k.kh:Math.round(k.kh/4); }
+function thFor(k,ma,sc,m){
+  const tuans=scopeWks(sc||S.scope);
+  return tuans.reduce((s,t)=>s+(gTH(m,t,ma)[k.key]||0),0);
+}
+function thForAll(k,sc,m){
+  return NVS.reduce((s,nv)=>s+thFor(k,nv.ma,sc,m),0);
+}
+function weightedScore(ma,sc,m){
+  const stars=KPIS.filter(k=>k.star);
+  if(!stars.length)return null;
+  const tuans=scopeWks(sc);
+  const anyTH=stars.some(k=>tuans.some(t=>gTH(m,t,ma)[k.key]!=null));
+  if(!anyTH)return null;
+  const totalW=stars.reduce((s,k)=>s+k.w,0);
+  if(!totalW)return 0;
+  const score=stars.reduce((s,k)=>{
+    const kh=khFor(k,sc);
+    const th=thFor(k,ma,sc,m);
+    return s+(kh>0?Math.min(150,th/kh*100):0)*k.w;
+  },0);
+  return Math.round(score/totalW);
+}
+
+// ════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════
+function renderDash(){
+  const starKPIs=KPIS.filter(k=>k.star);
+  // Hero
+  const hr=document.getElementById('heroRow');
+  if(hr) hr.innerHTML=starKPIs.map(k=>{
+    const th=thForAll(k,S.scope,CUR_M),kh=khFor(k),p=pct(th,kh),c=pCol(p);
+    return `<div class="hero-cell"><div class="hc-lbl">${k.icon} ${k.lbl}</div>
+      <div class="hc-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div>
+      <div class="hc-pct" style="color:${c}">${p!==null?p+'%':'—'}</div>
+      <div class="hc-bar"><div class="hc-fill" style="width:${Math.min(100,p||0)}%;background:${c}"></div></div></div>`;
+  }).join('');
+  // KPI cards
+  const kr=document.getElementById('kpiRow');
+  if(kr) kr.innerHTML=KPIS.map(k=>{
+    const th=thForAll(k,S.scope,CUR_M),kh=khFor(k),p=pct(th,kh),c=pCol(p);
+    return `<div class="kc"><div class="kc-top" style="background:${c}"></div>
+      <div class="kc-icon" style="background:${k.color}18">${k.icon}</div>
+      <div class="kc-lbl">${k.lbl}${k.star?' ★':''}</div>
+      <div class="kc-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div>
+      <div class="kc-kh">KH: ${fmt(kh,k.unit)}</div>
+      <div class="kc-bar"><div class="kc-fill" style="width:${Math.min(100,p||0)}%;background:${c}"></div></div>
+      <div class="kc-pct" style="color:${c}">${p!==null?p+'%':'—'}</div></div>`;
+  }).join('');
+  // Spark
+  const sw=document.getElementById('sparkW');
+  if(sw) sw.innerHTML=starKPIs.map(k=>{
+    const wkVals=['T1','T2','T3','T4'].map(t=>NVS.reduce((s,nv)=>s+(gTH(CUR_M,t,nv.ma)[k.key]||0),0));
+    const mx=Math.max(...wkVals,1);
+    return `<div class="spark-group">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-size:11px">${k.icon}</span><span style="font-size:11px;font-weight:700">${k.lbl}</span></div>
+      <div class="spark-bars">${wkVals.map(v=>{const p2=pct(v,Math.round(k.kh/4)),h=Math.max(4,v/mx*100),c=pCol(p2);return `<div class="spark-bar" style="height:${h}%;background:${c}55;border-top:2px solid ${c}"></div>`;}).join('')}</div>
+      <div class="spark-lbls">${['T1','T2','T3','T4'].map(t=>`<div class="spark-lbl">${t}</div>`).join('')}</div></div>`;
+  }).join('');
+  // Forecast (pipeline giá trị)
+  const fc=document.getElementById('fcW');
+  if(fc){
+    const allDeals=NVS.flatMap(nv=>Object.values(gPL(CUR_M,nv.ma)||{}));
+    fc.innerHTML=starKPIs.map(k=>{
+      const pipe=allDeals.filter(d=>d.kpiKey===k.key&&d.stage!=='hoan_tat').reduce((s,d)=>s+(d.value||0),0);
+      const cur=thForAll(k,S.scope,CUR_M);
+      const projected=cur+pipe;
+      const p2=pct(projected,k.kh),c=pCol(p2);
+      return `<div class="fc-row"><div class="fc-ic">${k.icon}</div>
+        <div class="fc-track"><div class="fc-fill" style="width:${Math.min(100,p2||0)}%;background:${c}">${p2||0}%</div></div>
+        <div class="fc-pct" style="color:${c}">${p2||0}%</div></div>`;
+    }).join('');
+  }
+  // Rank
+  const rr=document.getElementById('rankRows');
+  if(rr){
+    const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.scope,CUR_M)}))
+      .sort((a,b)=>(b.sc||0)-(a.sc||0));
+    const k0=KPIS[0],k1=KPIS[1];
+    rr.innerHTML=sorted.map((x,i)=>{
+      const c=pCol(x.sc),st=stL(x.sc);
+      const dn=pct(thFor(k0,x.nv.ma,S.scope,CUR_M),khFor(k0));
+      const hd=pct(thFor(k1,x.nv.ma,S.scope,CUR_M),khFor(k1));
+      return `<div class="rtr"><div class="rn">${i+1}</div>
+        <div class="rname-w"><div class="rav" style="background:${x.nv.col}18;color:${x.nv.col}">${x.nv.ten.split(' ').pop()[0]}</div>
+        <div><div class="rname">${x.nv.ten.split(' ').slice(-2).join(' ')}</div><div class="rsub">${st}</div></div></div>
+        <div class="rcell" style="color:${pCol(dn)}">${dn!==null?dn+'%':'—'}</div>
+        <div class="rcell" style="color:${pCol(hd)}">${hd!==null?hd+'%':'—'}</div>
+        <div class="rcell" style="font-size:14px;color:${c}">${x.sc!==null?x.sc+'%':'—'}</div></div>`;
+    }).join('');
+  }
+}
+
+// ════════════════════════════════════════════
+// NHẬP TH
+// ════════════════════════════════════════════
+function renderNhap(){
+  const el=document.getElementById('nvList');if(!el)return;
+  el.innerHTML=NVS.map(nv=>{
+    const th=gTH(CUR_M,S.tuan,nv.ma);
+    const kh=gKT(CUR_M,S.tuan,nv.ma);
+    const hasKH=KPIS.some(k=>kh[k.key]!=null);
+    const hasTH=KPIS.some(k=>th[k.key]!=null);
+    const statusColor=hasTH?'var(--green)':hasKH?'var(--amber)':'var(--t3)';
+    const statusLbl=hasTH?'✓ Đã nhập TH':hasKH?'⚡ Cần nhập':'Chưa có KH';
+    const chips=hasTH?KPIS.filter(k=>k.star).map(k=>{const p=pct(th[k.key]||0,kh[k.key]||k.kh/4);return `<span class="chip" style="background:${pCol(p)}18;color:${pCol(p)};border-color:${pCol(p)}30">${k.icon} ${p!==null?p+'%':'—'}</span>`;}).join(''):'';
+    return `<div class="nv-row" onclick="openNhapForm('${nv.ma}')" style="${hasTH?'border-left:3px solid var(--green)':''}${hasKH&&!hasTH?'border-left:3px solid var(--amber)':''}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="stat-dot" style="background:${statusColor}"></div>
+      <div class="nv-av" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div></div>
+      <div style="flex:1"><div class="nv-name">${nv.ten}</div><div class="nv-sub" style="color:${statusColor}">${statusLbl}</div>${chips?`<div class="chip-row">${chips}</div>`:''}</div>
+      <span style="color:var(--t3);font-size:16px">›</span></div>`;
+  }).join('');
+}
+
+window.openNhapForm=function(ma){
+  const nv=NVS.find(n=>n.ma===ma);if(!nv)return;
+  S.formNV=ma;
+  const th=gTH(CUR_M,S.tuan,ma);
+  const kh=gKT(CUR_M,S.tuan,ma);
+  const el=document.getElementById('nhapForm');if(!el)return;
+  el.innerHTML=`<div style="padding:11px 14px;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
+    <div class="nv-av" style="width:42px;height:42px;background:${nv.col}18;color:${nv.col};font-size:16px">${nv.ten.split(' ').pop()[0]}</div>
+    <div><div style="font-size:14px;font-weight:700">${nv.ten}</div><div class="nv-sub">Tuần ${S.tuan} · ${CUR_M.replace('_','/')}</div></div></div>`
+  +KPIS.map(k=>{
+    const tv=th[k.key]??'', khv=kh[k.key]||Math.round(k.kh/4);
+    const p=pct(parseFloat(tv)||0,khv),c=pCol(p);
+    return `<div class="ff"><div class="ff-hdr">
+      <div class="ff-left"><div class="ff-ic" style="background:${k.color}18">${k.icon}</div>
+      <div><div class="ff-lbl">${k.star?'★ ':''}${k.lbl}</div><div class="ff-kh">KH ${S.tuan}: ${fmt(khv,k.unit)}</div></div></div>
+      <div class="ff-pct" style="color:${c}" id="pct-${k.key}">${p!==null?p+'%':'—'}</div></div>
+      <input class="fi" type="number" id="th-${k.key}" value="${tv}" placeholder="${k.lbl} (${k.unit})" oninput="updatePct('${k.key}',${khv},this.value)">
+      <div class="ft"><div class="ft-fill" id="ft-${k.key}" style="width:${Math.min(100,p||0)}%;background:${c}"></div></div></div>`;
+  }).join('');
+  document.getElementById('btnSaveTH').textContent='Lưu kết quả '+S.tuan+' · '+nv.ten.split(' ').pop();
+  setTab('nhap-form');
+};
+
+window.updatePct=function(key,kh,val){
+  const p=pct(parseFloat(val)||0,kh),c=pCol(p);
+  const pe=document.getElementById('pct-'+key);if(pe){pe.textContent=p!==null?p+'%':'—';pe.style.color=c;}
+  const fe=document.getElementById('ft-'+key);if(fe){fe.style.width=Math.min(100,p||0)+'%';fe.style.background=c;}
+};
+
+window.saveTH=async function(){
+  const ma=S.formNV;if(!ma)return;
+  const data={};
+  KPIS.forEach(k=>{const v=document.getElementById('th-'+k.key)?.value;if(v!==''&&v!=null)data[k.key]=parseFloat(v)||0;});
+  data._ts=Date.now();
+  const btn=document.getElementById('btnSaveTH');
+  btn.textContent='Đang lưu...';btn.disabled=true;
+  const ok=await fbSet(`thTuan/${CUR_M}/${S.tuan}/${ma}`,data);
+  if(!S.thTuan[CUR_M])S.thTuan[CUR_M]={};
+  if(!S.thTuan[CUR_M][S.tuan])S.thTuan[CUR_M][S.tuan]={};
+  S.thTuan[CUR_M][S.tuan][ma]=data;
+  btn.textContent=ok?'✅ Đã lưu!':'❌ Lỗi — thử lại';
+  btn.disabled=false;
+  setTimeout(()=>setTab('nhap'),1200);
+};
+
+// ════════════════════════════════════════════
+// PIPELINE
+// ════════════════════════════════════════════
+function renderPipeline(){
+  const el=document.getElementById('plContent');if(!el)return;
+  if(S.plTab==='nv'){
+    el.innerHTML=NVS.map(nv=>{
+      const deals=Object.values(gPL(CUR_M,nv.ma)||{});
+      const active=deals.filter(d=>d.stage!=='hoan_tat').length;
+      const done=deals.filter(d=>d.stage==='hoan_tat').length;
+      const over=deals.filter(d=>d.over).length;
+      return `<div class="nv-row" onclick="openPlNV('${nv.ma}')">
+        <div class="nv-av" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div>
+        <div style="flex:1"><div class="nv-name">${nv.ten}</div>
+        <div class="nv-sub">${active?`<span style="color:var(--amber);font-weight:700">${active} đang xử lý</span>`:'0 deal'}${done?` · <span style="color:var(--green)">${done} ✅</span>`:''}${over?` · <span style="color:var(--red)">⚠ ${over} quá hạn</span>`:''}</div></div>
+        <button onclick="event.stopPropagation();openPlForm('${nv.ma}',null)" class="teal-btn">+ Deal</button></div>`;
+    }).join('');
+  } else {
+    // Toàn phòng — funnel
+    el.innerHTML='<div style="padding-top:4px">'+PL_STAGES.map(st=>{
+      const allDeals=NVS.flatMap(nv=>Object.entries(gPL(CUR_M,nv.ma)||{}).map(([id,d])=>({...d,id,nvMa:nv.ma})));
+      const sd=allDeals.filter(d=>d.stage===st.k);
+      const val=sd.reduce((s,d)=>s+(d.value||0),0);
+      if(!sd.length)return'';
+      return `<div class="pl-block"><div class="pl-s-hdr" style="background:${st.col}10;border-color:${st.col}25">
+        <div style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700"><span>${st.lbl}</span>
+        <span style="padding:2px 7px;border-radius:10px;font-size:9.5px;background:${st.col}20;color:${st.col}">${sd.length}</span></div>
+        ${val?`<span style="font-size:11px;font-weight:700;font-family:var(--mono);color:${st.col}">${val.toLocaleString('vi-VN')} tr</span>`:''}
+        </div><div class="pl-deals">${sd.map(d=>{
+          const kpi=KPIS.find(k=>k.key===d.kpiKey)||KPIS[0];
+          const nv=NVS.find(n=>n.ma===d.nvMa)||{ten:'NV'};
+          return `<div class="pl-deal"><div class="pl-ic" style="background:${kpi.color}18">${kpi.icon}</div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700">${d.khName||'—'}</div>
+            <div style="font-size:10px;color:var(--t2)">${nv.ten.split(' ').pop()} · ${kpi.lbl}</div></div>
+            <div style="text-align:right"><div style="font-size:12px;font-weight:700;font-family:var(--mono);color:${kpi.color}">${(d.value||0).toLocaleString('vi-VN')} tr</div>
+            ${d.over?'<div style="font-size:9.5px;font-weight:600;color:var(--red)">⚠ Quá hạn</div>':''}</div></div>`;
+        }).join('')}</div></div>`;
+    }).join('')+'</div>';
+  }
+}
+
+window.openPlNV=function(ma){
+  S.plNV=ma;
+  const nv=NVS.find(n=>n.ma===ma);if(!nv)return;
+  const deals=Object.entries(gPL(CUR_M,ma)||{});
+  // Show in pipeline section with back button
+  const el=document.getElementById('plContent');if(!el)return;
+  el.innerHTML=`<button class="btn-back" onclick="S.plNV=null;renderPipeline()" style="border-bottom:1px solid var(--line)">← Danh sách</button>
+    <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)">
+      <div class="nv-av" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div>
+      <div style="flex:1"><div class="nv-name">${nv.ten}</div></div>
+      <button onclick="openPlForm('${ma}',null)" class="teal-btn">+ Deal mới</button>
+    </div>`
+  +PL_STAGES.map(st=>{
+    const sd=deals.filter(([,d])=>d.stage===st.k);
+    if(!sd.length)return'';
+    return `<div style="padding:0 14px;margin-top:8px"><div style="font-size:10px;font-weight:700;color:${st.col};text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">${st.lbl} (${sd.length})</div>`
+      +sd.map(([id,d])=>{
+        const kpi=KPIS.find(k=>k.key===d.kpiKey)||KPIS[0];
+        return `<div style="background:var(--bg1);border-radius:11px;padding:10px 12px;margin-bottom:6px;border:1px solid var(--line);display:flex;gap:9px;align-items:center">
+          <div class="pl-ic" style="background:${kpi.color}18">${kpi.icon}</div>
+          <div style="flex:1"><div style="font-size:12px;font-weight:700">${d.khName||'—'}</div>
+          <div style="font-size:10px;color:var(--t2)">${kpi.lbl} · ${(d.value||0).toLocaleString('vi-VN')} tr · Hạn: ${d.deadline||'—'}</div></div>
+          <button onclick="openPlForm('${ma}','${id}')" style="padding:4px 8px;border-radius:6px;border:1px solid var(--line2);background:transparent;color:var(--t2);font-size:11px;font-weight:700;font-family:var(--font)">✏</button>
+          <button onclick="deleteDeal('${ma}','${id}')" style="padding:4px 8px;border-radius:6px;border:1px solid rgba(244,63,94,.2);background:rgba(244,63,94,.07);color:var(--red);font-size:11px;font-weight:700;font-family:var(--font)">✕</button>
+          </div>`;
+      }).join('')+'</div>';
+  }).join('');
+};
+
+window.openPlForm=function(nvMa,dealId){
+  S.plNV=nvMa; S.editDealId=dealId;
+  const nv=NVS.find(n=>n.ma===nvMa)||{ten:'NV',col:'#00d4b4'};
+  const existing=dealId?((gPL(CUR_M,nvMa)||{})[dealId]||{}):{};
+  const el=document.getElementById('plForm');if(!el)return;
+  el.innerHTML=`<div style="padding:11px 14px;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
+    <div class="nv-av" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div>
+    <div><div style="font-size:14px;font-weight:700">${dealId?'Sửa Deal':'Deal mới'}</div><div class="nv-sub">${nv.ten}</div></div></div>
+  <div style="padding:0 14px;margin-top:12px">
+    <label class="bk-label">Tên khách hàng</label>
+    <input class="fi" id="pl-kh" type="text" value="${existing.khName||''}" placeholder="Tên công ty / cá nhân" style="margin-bottom:10px">
+    <label class="bk-label">Sản phẩm KPI</label>
+    <select class="fi" id="pl-kpi" style="appearance:none;margin-bottom:10px">
+      ${KPIS.map(k=>`<option value="${k.key}" ${existing.kpiKey===k.key?'selected':''}>${k.icon} ${k.lbl}</option>`).join('')}
+    </select>
+    <label class="bk-label">Giá trị dự kiến (${KPIS[0].unit})</label>
+    <input class="fi" id="pl-val" type="number" value="${existing.value||''}" placeholder="Giá trị" style="margin-bottom:10px">
+    <label class="bk-label">Giai đoạn</label>
+    <select class="fi" id="pl-stage" style="appearance:none;margin-bottom:10px">
+      ${PL_STAGES.map(st=>`<option value="${st.k}" ${existing.stage===st.k?'selected':''}>${st.lbl}</option>`).join('')}
+    </select>
+    <label class="bk-label">Hạn xử lý</label>
+    <input class="fi" id="pl-deadline" type="date" value="${existing.deadline||''}" style="margin-bottom:10px">
+    <label class="bk-label">Ghi chú</label>
+    <input class="fi" id="pl-note" type="text" value="${existing.note||''}" placeholder="Ghi chú thêm">
+  </div>`;
+  setTab('pl-form');
+};
+
+window.saveDeal=async function(){
+  const nvMa=S.plNV;if(!nvMa)return;
+  const deal={
+    khName:document.getElementById('pl-kh').value.trim()||'—',
+    kpiKey:document.getElementById('pl-kpi').value,
+    value:parseFloat(document.getElementById('pl-val').value)||0,
+    stage:document.getElementById('pl-stage').value,
+    deadline:document.getElementById('pl-deadline').value||'',
+    note:document.getElementById('pl-note').value||'',
+    _ts:Date.now(),
+  };
+  const now=new Date();
+  deal.over=deal.deadline&&new Date(deal.deadline)<now&&deal.stage!=='hoan_tat';
+  let ok;
+  if(S.editDealId){
+    ok=await fbSet(`pipeline/${CUR_M}/${nvMa}/${S.editDealId}`,deal);
+    if(!S.pipeline[CUR_M])S.pipeline[CUR_M]={};
+    if(!S.pipeline[CUR_M][nvMa])S.pipeline[CUR_M][nvMa]={};
+    S.pipeline[CUR_M][nvMa][S.editDealId]=deal;
+  } else {
+    const id=await fbPush(`pipeline/${CUR_M}/${nvMa}`,deal);
+    if(id){
+      if(!S.pipeline[CUR_M])S.pipeline[CUR_M]={};
+      if(!S.pipeline[CUR_M][nvMa])S.pipeline[CUR_M][nvMa]={};
+      S.pipeline[CUR_M][nvMa][id]=deal;
+      ok=true;
+    }
+  }
+  alert(ok?'✅ Đã lưu deal!':'❌ Lỗi lưu — kiểm tra kết nối');
+  setTab('pipeline');
+};
+
+window.deleteDeal=async function(nvMa,id){
+  if(!confirm('Xóa deal này?'))return;
+  await fbSet(`pipeline/${CUR_M}/${nvMa}/${id}`,null);
+  if(S.pipeline[CUR_M]?.[nvMa]) delete S.pipeline[CUR_M][nvMa][id];
+  openPlNV(nvMa);
+};
+
+// ════════════════════════════════════════════
+// ALERTS
+// ════════════════════════════════════════════
+function renderAlerts(){
+  const el=document.getElementById('alertContent');if(!el)return;
+  let alerts=[];
+  // 1. NV chưa nhập TH
+  const notEntered=NVS.filter(nv=>{
+    const kh=gKT(CUR_M,CUR_T,nv.ma);
+    const th=gTH(CUR_M,CUR_T,nv.ma);
+    return KPIS.some(k=>kh[k.key]!=null) && !KPIS.some(k=>th[k.key]!=null);
+  });
+  if(notEntered.length) alerts.push({type:'red',title:`🚨 ${notEntered.length} NV chưa nhập TH (${CUR_T})`,
+    body:notEntered.map(nv=>`<div class="al-nv"><div class="rav" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div><span>${nv.ten}</span></div>`).join('')});
+  // 2. Deals quá hạn
+  const overDeals=NVS.flatMap(nv=>Object.values(gPL(CUR_M,nv.ma)||{}).filter(d=>d.over).map(d=>({...d,nvTen:nv.ten})));
+  if(overDeals.length) alerts.push({type:'red',title:`⏰ ${overDeals.length} deal Pipeline quá hạn`,
+    body:overDeals.map(d=>`<div class="al-nv"><span style="font-size:14px">📋</span><div><div style="font-size:12px;font-weight:700">${d.nvTen}</div><div style="font-size:10px;color:var(--t2)">${d.khName} · Hạn ${d.deadline}</div></div></div>`).join('')});
+  // 3. NV dưới 50% KPI trọng điểm
+  const lowNV=NVS.filter(nv=>{ const sc=weightedScore(nv.ma,S.scope,CUR_M); return sc!==null&&sc<50; });
+  if(lowNV.length) alerts.push({type:'amber',title:`⚠️ ${lowNV.length} NV dưới 50% KPI trọng điểm`,
+    body:lowNV.map(nv=>`<div class="al-nv"><div class="rav" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div><span>${nv.ten} — ${weightedScore(nv.ma,S.scope,CUR_M)}%</span></div>`).join('')});
+
+  const cnt=alerts.length;
+  const dot=document.getElementById('alertDot');
+  if(dot){ dot.style.display=cnt?'flex':'none'; dot.textContent=cnt; }
+  const ab=document.getElementById('alertBadge');
+  if(ab){ ab.textContent=cnt?`⚠ ${cnt} cảnh báo`:''; ab.style.display=cnt?'':'none'; }
+
+  el.innerHTML=alerts.length
+    ? alerts.map(a=>`<div class="al-item"><div class="al-hdr" style="border-left-color:var(--${a.type})"><div style="font-size:12px;font-weight:800;color:var(--${a.type})">${a.title}</div></div><div class="al-body">${a.body}</div></div>`).join('')
+      +'<div style="margin:0 14px;padding:10px 12px;background:rgba(34,211,160,.07);border:1px solid rgba(34,211,160,.15);border-radius:11px;display:flex;align-items:center;gap:9px"><span>✅</span><span style="font-size:11.5px;font-weight:600;color:var(--green)">Đã kiểm tra xong</span></div>'
+    : '<div class="empty">✅ Không có cảnh báo</div>';
+}
+
+// ════════════════════════════════════════════
+// TUYÊN DƯƠNG
+// ════════════════════════════════════════════
+function renderStar(){
+  const el=document.getElementById('starContent');if(!el)return;
+  const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.starScope,CUR_M)}))
+    .filter(x=>x.sc!==null).sort((a,b)=>(b.sc||0)-(a.sc||0));
+  if(!sorted.length){el.innerHTML='<div class="empty">Chưa có dữ liệu TH</div>';return;}
+  const top=sorted[0];
+  const stars=KPIS.filter(k=>k.star);
+  el.innerHTML=`<div class="star-hero"><div class="sh-glow"></div>
+    <div class="sh-top"><span style="font-size:34px">👑</span><div><div class="sh-label">Xuất sắc · ${CUR_M.replace('_','/')} · ${S.starScope==='thang'?'Cả tháng':S.starScope}</div><div class="sh-name">${top.nv.ten}</div></div></div>
+    <div class="sh-info"><div class="sh-score">TB KPI trọng điểm: <b>${top.sc}%</b></div></div>
+    <div class="sh-kpis">${stars.slice(0,3).map(k=>{
+      const th=thFor(k,top.nv.ma,S.starScope,CUR_M),kh=khFor(k,S.starScope),p=pct(th,kh),c=pCol(p);
+      return `<div class="sk-item"><div class="sk-icon">${k.icon}</div><div class="sk-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div><div class="sk-lbl">${k.lbl}</div><div class="sk-pct" style="color:${c}">${p!==null?p+'%':'—'}</div></div>`;
+    }).join('')}</div></div>`
+  +'<div class="sec">Bảng xếp hạng</div>'
+  +sorted.map((x,i)=>{
+    const c=pCol(x.sc);
+    return `<div class="t3-row"><div style="font-size:20px;width:24px">${['🥇','🥈','🥉'][i]||'  '}</div>
+      <div class="rav" style="width:32px;height:32px;border-radius:9px;background:${x.nv.col}18;color:${x.nv.col}">${x.nv.ten.split(' ').pop()[0]}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:700">${x.nv.ten}</div></div>
+      <div style="font-size:17px;font-weight:800;font-family:var(--mono);color:${c}">${x.sc}%</div></div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+// GIAO KH + BỘ KPIS
+// ════════════════════════════════════════════
+function renderKH(){
+  const el=document.getElementById('khContent');if(!el)return;
+  if(S.khTab==='phong'){
+    const kp=gKP(CUR_M);
+    el.innerHTML=KPIS.map(k=>`<div class="ff"><div class="ff-hdr">
+      <div class="ff-left"><div class="ff-ic" style="background:${k.color}18">${k.icon}</div>
+      <div><div class="ff-lbl">${k.star?'★ ':''}${k.lbl}</div><div class="ff-kh">Hiện tại: ${fmt(kp[k.key]||k.kh,k.unit)}</div></div></div></div>
+      <input class="fi" type="number" id="kp-${k.key}" value="${kp[k.key]||k.kh}" placeholder="KH tháng (${k.unit})"></div>`).join('')
+      +'<div class="save-bar"><button class="btn-p" onclick="saveKHPhong()">Lưu KH Phòng</button></div>';
+  } else if(S.khTab==='tuan'){
+    el.innerHTML=NVS.map(nv=>`<div class="nv-row" onclick="openKHTuan('${nv.ma}')">
+      <div class="nv-av" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div>
+      <div style="flex:1"><div class="nv-name">${nv.ten}</div><div class="nv-sub">Xem / Chỉnh KH tuần</div></div>
+      <span style="color:var(--t3);font-size:16px">›</span></div>`).join('');
+  } else if(S.khTab==='bkpi'){
+    renderBKPI(el);
+  } else {
+    renderDSNV(el);
+  }
+}
+
+window.saveKHPhong=async function(){
+  const data={};
+  KPIS.forEach(k=>{const v=document.getElementById('kp-'+k.key)?.value;data[k.key]=parseFloat(v)||k.kh;});
+  data._ts=Date.now();
+  const ok=await fbSet(`khPhong/${CUR_M}`,data);
+  if(!S.khPhong[CUR_M])S.khPhong[CUR_M]={};
+  Object.assign(S.khPhong[CUR_M],data);
+  alert(ok?'✅ Đã lưu KH Phòng!':'❌ Lỗi lưu');
+};
+
+window.openKHTuan=function(ma){
+  const nv=NVS.find(n=>n.ma===ma);if(!nv)return;
+  // Show KH tuần form inline
+  const el=document.getElementById('khContent');
+  const tabs=['T1','T2','T3','T4'];
+  el.innerHTML=`<button class="btn-back" onclick="setKhTab(document.querySelector('#khTabs .kh-tab'),'phong')" style="border-bottom:1px solid var(--line)">← KH Phòng</button>
+    <div style="padding:10px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line)">
+      <div class="nv-av" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div>
+      <div style="font-size:13px;font-weight:700">${nv.ten}</div></div>
+    <div class="stabs" id="khTuanTabs">${tabs.map((t,i)=>`<button class="stab${i===0?' on':''}" onclick="loadKHTuanForm('${ma}','${t}',this)">${t}</button>`).join('')}</div>
+    <div id="khTuanForm"></div>`;
+  loadKHTuanForm(ma,'T1',document.querySelector('#khTuanTabs .stab'));
+};
+
+window.loadKHTuanForm=function(ma,t,btn){
+  if(btn){ btn.closest('.stabs')?.querySelectorAll('.stab').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+  const kh=gKT(CUR_M,t,ma);
+  const el=document.getElementById('khTuanForm');if(!el)return;
+  el.innerHTML=KPIS.map(k=>`<div class="ff"><div class="ff-hdr">
+    <div class="ff-left"><div class="ff-ic" style="background:${k.color}18">${k.icon}</div>
+    <div><div class="ff-lbl">${k.lbl}</div><div class="ff-kh">Gợi ý: ${fmt(Math.round(k.kh/4),k.unit)}</div></div></div></div>
+    <input class="fi" type="number" id="kt-${t}-${k.key}" value="${kh[k.key]||''}" placeholder="KH ${t} (${k.unit})"></div>`).join('')
+    +`<div class="save-bar"><button class="btn-p" onclick="saveKHTuan('${ma}','${t}')">Lưu KH ${t}</button></div>`;
+};
+
+window.saveKHTuan=async function(ma,t){
+  const data={};
+  KPIS.forEach(k=>{const v=document.getElementById(`kt-${t}-${k.key}`)?.value;if(v!==''&&v!=null)data[k.key]=parseFloat(v)||0;});
+  data._ts=Date.now();
+  const ok=await fbSet(`khTuan/${CUR_M}/${t}/${ma}`,data);
+  if(!S.khTuan[CUR_M])S.khTuan[CUR_M]={};
+  if(!S.khTuan[CUR_M][t])S.khTuan[CUR_M][t]={};
+  S.khTuan[CUR_M][t][ma]=data;
+  alert(ok?`✅ Lưu KH ${t} thành công!`:'❌ Lỗi lưu');
+};
+
+// ── Bộ KPIs ──
+const ICONS=['🏦','💰','💼','🌐','🛡️','👤','💳','📊','🏢','🎯','💵','📈','🔑','🤝','🏗️','⚡'];
+let newKpiIcon='📊';
+
+function renderBKPI(el){
+  const activeStars=KPIS.filter(k=>k.star);
+  const totalW=activeStars.reduce((s,k)=>s+k.w,0);
+  const mainK=KPIS.filter(k=>k.group==='main');
+  const crossK=KPIS.filter(k=>k.group==='cross');
+  el.innerHTML=
+    `<div class="bk-info">Trọng số ⭐ dùng để tính điểm NV theo công thức: <b>Σ(TH%×trọng số) / Σ(trọng số)</b><br>Tổng trọng số hiện tại: <b>${totalW.toFixed(1)}</b></div>`
+    +`<div class="bk-summary">
+      <div class="bk-sum-cell"><div class="bk-sum-num" style="color:var(--teal)">${KPIS.length}</div><div class="bk-sum-lbl">Tổng KPIs</div></div>
+      <div class="bk-sum-cell"><div class="bk-sum-num" style="color:var(--amber)">${activeStars.length}</div><div class="bk-sum-lbl">Trọng điểm ⭐</div></div>
+      <div class="bk-sum-cell"><div class="bk-sum-num" style="color:var(--blue)" id="totalWNum">${totalW.toFixed(1)}</div><div class="bk-sum-lbl">Tổng T.Số</div></div>
+    </div>`
+    +'<div class="bk-list">'
+    +'<div class="bk-ghdr"><span>📌</span>Chỉ tiêu chính</div>'
+    +mainK.map(k=>bkpiItem(k,totalW)).join('')
+    +'<div class="bk-ghdr" style="margin-top:6px"><span>🔗</span>Bán chéo</div>'
+    +crossK.map(k=>bkpiItem(k,totalW)).join('')
+    +'<div style="margin-top:10px">'
+    +'<div class="bk-add-form">'
+      +'<div class="bk-add-title">➕ Thêm KPI mới</div>'
+      +'<div class="bk-form-grid">'
+        +'<div><label class="bk-label">Tên KPI</label><input id="nk-name" class="bk-fi" type="text" placeholder="VD: Bảo hiểm DN"></div>'
+        +'<div><label class="bk-label">Đơn vị</label><input id="nk-unit" class="bk-fi" type="text" placeholder="tr đ / thẻ / USD"></div>'
+      +'</div>'
+      +'<div class="bk-form-grid">'
+        +'<div><label class="bk-label">Nhóm</label><select id="nk-group" class="bk-fi" style="appearance:none"><option value="main">Chỉ tiêu chính</option><option value="cross">Bán chéo</option></select></div>'
+        +'<div><label class="bk-label">Trọng số</label><input id="nk-w" class="bk-fi" type="number" value="0.5" step="0.1" min="0.1" max="3"></div>'
+      +'</div>'
+      +'<div><label class="bk-label">KH tháng</label><input id="nk-kh" class="bk-fi" type="number" placeholder="Chỉ tiêu tháng" style="margin-bottom:7px"></div>'
+      +'<label class="bk-label">Biểu tượng</label>'
+      +'<div class="bk-icon-grid" id="iconGrid">'+ICONS.map(ic=>`<button class="bk-icon-opt${ic===newKpiIcon?' on':''}" onclick="selectIcon(this,'${ic}')">${ic}</button>`).join('')+'</div>'
+      +'<div style="display:flex;gap:7px;margin-top:8px">'
+        +'<select id="nk-star" class="bk-fi" style="appearance:none"><option value="0">☆ Không trọng điểm</option><option value="1">⭐ Trọng điểm</option></select>'
+        +'<button onclick="addKPI()" class="btn-p" style="flex-shrink:0;padding:0 16px;width:auto">Thêm</button>'
+      +'</div>'
+    +'</div></div>'
+    +'<div style="padding-bottom:12px"><button class="btn-p" onclick="saveKPIConfig()">💾 Lưu cấu hình</button></div>'
+    +'</div>';
+  KPIS.forEach(k=>{ const sl=document.getElementById('w-'+k.key); if(sl) updateSlider(sl,k.w); });
+}
+
+function bkpiItem(k,totalW){
+  const share=totalW>0?Math.round(k.w/totalW*100):0;
+  return `<div class="bk-item" id="item-${k.key}">
+    <div class="bk-item-top">
+      <span class="bk-drag">⠿</span>
+      <div class="bk-ic" style="background:${k.color}18">${k.icon}</div>
+      <div class="bk-main"><div class="bk-name">${k.lbl}</div><div class="bk-meta">${k.unit} · KH: ${k.kh.toLocaleString('vi-VN')}</div></div>
+      <div class="bk-right">
+        <button class="star-btn${k.star?' starred':''}" onclick="toggleKpiStar('${k.key}')" title="Trọng điểm">${k.star?'⭐':'☆'}</button>
+        <label class="sw"><input type="checkbox" checked><span class="sw-slider"></span></label>
+      </div>
+    </div>
+    ${k.star?`<div class="bk-weight">
+      <span class="bk-w-lbl">Trọng số</span>
+      <input type="range" class="bk-w-slider" id="w-${k.key}" min="0.1" max="3" step="0.1" value="${k.w}" oninput="onWeight('${k.key}',this.value)">
+      <span class="bk-w-val" id="wv-${k.key}">${k.w.toFixed(1)}</span>
+      <span class="bk-w-badge" id="wb-${k.key}">${share}%</span>
+    </div>`:''}
+    <div class="bk-item-actions">
+      <button class="bk-act-btn" onclick="editKPI('${k.key}')" style="border:1px solid rgba(59,130,246,.2);background:rgba(59,130,246,.07);color:var(--blue)">✏ Sửa</button>
+      <button class="bk-act-btn" onclick="deleteKPI('${k.key}')" style="border:1px solid rgba(244,63,94,.2);background:rgba(244,63,94,.07);color:var(--red)">🗑 Xóa</button>
+    </div></div>`;
+}
+
+function updateSlider(sl,val){ sl.style.setProperty('--pct',Math.round((val-0.1)/(3-0.1)*100)+'%'); }
+
+window.onWeight=function(key,val){
+  const k=KPIS.find(k=>k.key===key);if(!k)return;
+  k.w=parseFloat(val);
+  const vEl=document.getElementById('wv-'+key);if(vEl)vEl.textContent=parseFloat(val).toFixed(1);
+  const sl=document.getElementById('w-'+key);if(sl)updateSlider(sl,parseFloat(val));
+  const activeStars=KPIS.filter(k=>k.star);
+  const totalW=activeStars.reduce((s,k)=>s+k.w,0);
+  const twEl=document.getElementById('totalWNum');if(twEl)twEl.textContent=totalW.toFixed(1);
+  activeStars.forEach(k2=>{ const b=document.getElementById('wb-'+k2.key);if(b)b.textContent=Math.round(k2.w/totalW*100)+'%'; });
+  const bkInfo=document.querySelector('.bk-info b:last-of-type');if(bkInfo)bkInfo.textContent=totalW.toFixed(1);
+};
+
+window.toggleKpiStar=function(key){
+  const k=KPIS.find(k=>k.key===key);if(!k)return;
+  k.star=!k.star;
+  renderBKPI(document.getElementById('khContent'));
+  KPIS.forEach(k=>{ const sl=document.getElementById('w-'+k.key);if(sl)updateSlider(sl,k.w); });
+};
+
+window.selectIcon=function(btn,ic){ newKpiIcon=ic; document.querySelectorAll('.bk-icon-opt').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); };
+
+window.addKPI=function(){
+  const name=document.getElementById('nk-name').value.trim();
+  if(!name){alert('Vui lòng nhập tên KPI');return;}
+  const unit=document.getElementById('nk-unit').value.trim()||'tr đ';
+  const group=document.getElementById('nk-group').value;
+  const w=parseFloat(document.getElementById('nk-w').value)||0.5;
+  const kh=parseFloat(document.getElementById('nk-kh').value)||0;
+  const star=document.getElementById('nk-star').value==='1';
+  const colors=['#00d4b4','#f59e0b','#3b82f6','#38bdf8','#f97316','#22d3a0','#ec4899','#8b5cf6'];
+  const color=colors[KPIS.length%colors.length];
+  KPIS.push({key:'kpi_'+Date.now(),lbl:name,icon:newKpiIcon,unit,group,star,color,kh,w});
+  renderBKPI(document.getElementById('khContent'));
+  KPIS.forEach(k=>{ const sl=document.getElementById('w-'+k.key);if(sl)updateSlider(sl,k.w); });
+};
+
+window.deleteKPI=function(key){
+  if(!confirm('Xóa KPI này?'))return;
+  KPIS=KPIS.filter(k=>k.key!==key);
+  renderBKPI(document.getElementById('khContent'));
+};
+
+window.editKPI=function(key){
+  const k=KPIS.find(k=>k.key===key);if(!k)return;
+  const n=prompt('Tên KPI:',k.lbl);if(n===null)return;if(n.trim())k.lbl=n.trim();
+  const u=prompt('Đơn vị:',k.unit);if(u===null)return;if(u.trim())k.unit=u.trim();
+  const kh=prompt('KH tháng:',k.kh);if(kh===null)return;k.kh=parseFloat(kh)||k.kh;
+  renderBKPI(document.getElementById('khContent'));
+};
+
+window.saveKPIConfig=async function(){
+  const ok=await fbSet('config/kpis',KPIS);
+  alert(ok?'✅ Đã lưu cấu hình Bộ KPIs lên Firebase!':'❌ Lỗi lưu — kiểm tra kết nối');
+};
+
+function renderDSNV(el){
+  el.innerHTML=NVS.map(nv=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)">
+    <div class="nv-av" style="width:36px;height:36px;border-radius:10px;background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div>
+    <div style="flex:1"><div class="nv-name">${nv.ten}</div><div class="nv-sub">${nv.ma}</div></div>
+    <button onclick="deleteNV('${nv.ma}')" style="padding:5px 9px;border-radius:7px;border:1px solid rgba(244,63,94,.2);background:rgba(244,63,94,.08);color:var(--red);font-size:11px;font-weight:700;font-family:var(--font)">✕</button>
+  </div>`).join('')
+  +'<div style="padding:12px 14px"><div style="background:var(--bg1);border-radius:12px;padding:13px;border:1px solid var(--line)">'
+  +'<div style="font-size:11px;font-weight:700;margin-bottom:9px">➕ Thêm nhân viên</div>'
+  +'<input class="fi" id="new-nv-id" type="text" placeholder="Mã NV (VD: nv004)" style="margin-bottom:7px">'
+  +'<input class="fi" id="new-nv-ten" type="text" placeholder="HỌ VÀ TÊN (VIẾT HOA)" style="margin-bottom:9px">'
+  +'<button class="btn-p" onclick="addNV()">Thêm nhân viên</button></div></div>';
+}
+
+window.addNV=async function(){
+  const ma=document.getElementById('new-nv-id').value.trim();
+  const ten=document.getElementById('new-nv-ten').value.trim().toUpperCase();
+  if(!ma||!ten){alert('Vui lòng nhập đủ mã và tên');return;}
+  if(NVS.find(n=>n.ma===ma)){alert('Mã NV đã tồn tại');return;}
+  const colors=['#00d4b4','#8b5cf6','#f59e0b','#3b82f6','#22d3a0','#ec4899'];
+  const col=colors[NVS.length%colors.length];
+  NVS.push({ma,ten,col});
+  const ok=await fbSet('config/nvs',NVS);
+  alert(ok?'✅ Đã thêm NV!':'✅ Đã thêm (lưu Firebase sau)');
+  renderDSNV(document.getElementById('khContent'));
+};
+
+window.deleteNV=async function(ma){
+  if(!confirm('Xóa nhân viên này?'))return;
+  NVS=NVS.filter(n=>n.ma!==ma);
+  await fbSet('config/nvs',NVS);
+  renderDSNV(document.getElementById('khContent'));
+};
+
+// ════════════════════════════════════════════
+// ZALO
+// ════════════════════════════════════════════
+window.openZalo=function(){ buildZalo(); document.getElementById('zalo-overlay').style.display='flex'; };
+window.closeZalo=function(){ document.getElementById('zalo-overlay').style.display='none'; };
+window.setZaloType=function(btn,t){
+  btn.closest('#zaloTypeTabs').querySelectorAll('.stab').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  S.zaloType=t;
+  document.getElementById('zaloNVSel').style.display=t==='canhan'?'block':'none';
+  if(t==='canhan'){
+    const sel=document.getElementById('zalo-nv-sel');
+    sel.innerHTML=NVS.map(nv=>`<option value="${nv.ma}">${nv.ten}</option>`).join('');
+  }
+  buildZalo();
+};
+window.setZaloScope=function(btn,sc){
+  btn.closest('#zaloScopeTabs').querySelectorAll('.stab').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  S.zaloScope=sc; buildZalo();
+};
+window.buildZaloCanhan=function(ma){ S.zaloNVMa=ma; buildZalo(); };
+window.copyZalo=function(){
+  const t=document.getElementById('zalo-msg').textContent;
+  navigator.clipboard.writeText(t).then(()=>{ const btn=document.getElementById('zalo-copy-btn'); btn.textContent='✅ Đã copy!'; setTimeout(()=>btn.textContent='📋 Copy',1500); });
+};
+function buildZalo(){
+  const el=document.getElementById('zalo-msg');if(!el)return;
+  const sc=S.zaloScope;
+  const months=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  const now=new Date();
+  const mLbl=months[now.getMonth()]+'/'+now.getFullYear();
+  const scopeLbl=sc==='thang'?'Cả tháng':sc;
+  const pctEmoji=p=>p>=100?'🟢':p>=70?'🟡':p>=40?'🟠':'🔴';
+  if(S.zaloType==='phong'){
+    let msg=`🏦 KPI NAB KHDN — ${mLbl} (${scopeLbl})\n${'━'.repeat(22)}\n`;
+    KPIS.filter(k=>k.star).forEach(k=>{
+      const th=thForAll(k,sc,CUR_M),kh=khFor(k,sc),p=pct(th,kh)||0;
+      msg+=`${pctEmoji(p)}${k.icon} ${k.lbl} ⭐: ${th.toLocaleString('vi-VN')}${k.unit} / ${kh.toLocaleString('vi-VN')}${k.unit} (${p}%)\n`;
+    });
+    KPIS.filter(k=>!k.star).forEach(k=>{
+      const th=thForAll(k,sc,CUR_M),kh=khFor(k,sc),p=pct(th,kh)||0;
+      msg+=`${pctEmoji(p)}${k.icon} ${k.lbl}: ${th.toLocaleString('vi-VN')}${k.unit} / ${kh.toLocaleString('vi-VN')}${k.unit} (${p}%)\n`;
+    });
+    const top=NVS.map(nv=>({nv,sc2:weightedScore(nv.ma,sc,CUR_M)})).filter(x=>x.sc2!==null).sort((a,b)=>b.sc2-a.sc2)[0];
+    msg+='━'.repeat(22)+'\n';
+    if(top)msg+=`🏆 Xuất sắc: ${top.nv.ten} (${top.sc2}%)\n`;
+    el.textContent=msg.trim();
+  } else {
+    const ma=S.zaloNVMa||NVS[0]?.ma;
+    const nv=NVS.find(n=>n.ma===ma)||NVS[0];if(!nv)return;
+    const sc2=weightedScore(ma,sc,CUR_M);
+    let msg=`📊 KPI ${nv.ten.split(' ').pop()} — ${mLbl} (${scopeLbl})\n${'━'.repeat(22)}\n`;
+    KPIS.forEach(k=>{
+      const th=thFor(k,ma,sc,CUR_M),kh=khFor(k,sc),p=pct(th,kh)||0;
+      msg+=`${pctEmoji(p)}${k.icon} ${k.lbl}: ${th.toLocaleString('vi-VN')}${k.unit} (${p}%)\n`;
+    });
+    msg+='━'.repeat(22)+'\n';
+    if(sc2!==null)msg+=`⭐ Điểm tổng hợp: ${sc2}%\n`;
+    el.textContent=msg.trim();
+  }
+}
+
+// ════════════════════════════════════════════
+// EXPORT PDF
+// ════════════════════════════════════════════
+window.openExport=function(){
+  const months=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  const now=new Date();
+  const mLbl=months[now.getMonth()]+'/'+now.getFullYear();
+  const choice=confirm(`In báo cáo KPI ${mLbl}?\n\nOK = Cả tháng\nCancel = Tuần hiện tại (${CUR_T})`);
+  const sc=choice?'thang':CUR_T;
+  const pCol2=p=>p>=100?'#059669':p>=70?'#d97706':p>=40?'#ea580c':'#e11d48';
+  let html=`<html><head><meta charset="UTF-8"><title>KPI KHDN ${mLbl}</title>
+  <style>body{font-family:'Segoe UI',sans-serif;margin:20px;color:#0f172a}h1{font-size:18px;margin-bottom:4px}
+  .sub{color:#64748b;font-size:12px;margin-bottom:20px}table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#f1f5f9;padding:8px 10px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#475569}
+  td{padding:8px 10px;border-bottom:1px solid #e2e8f0}tr:last-child td{border-bottom:none}
+  .pct{font-weight:800;font-size:13px}.sig{margin-top:40px;font-size:12px;color:#94a3b8}
+  </style></head><body>
+  <h1>📊 KPI KHDN — ${mLbl} (${sc==='thang'?'Cả tháng':sc})</h1>
+  <div class="sub">Nam A Bank · Xuất ${new Date().toLocaleDateString('vi-VN')}</div>
+  <table><thead><tr><th>KPI</th><th>Thực hiện</th><th>Chỉ tiêu</th><th>%</th></tr></thead><tbody>`;
+  KPIS.forEach(k=>{
+    const th=thForAll(k,sc,CUR_M),kh=khFor(k,sc),p=pct(th,kh)||0;
+    html+=`<tr><td>${k.icon} ${k.lbl}${k.star?' ★':''}</td><td>${th.toLocaleString('vi-VN')} ${k.unit}</td><td>${kh.toLocaleString('vi-VN')} ${k.unit}</td><td class="pct" style="color:${pCol2(p)}">${p}%</td></tr>`;
+  });
+  html+=`</tbody></table><h2 style="margin-top:24px;font-size:14px">👥 Xếp hạng nhân viên</h2>
+  <table><thead><tr><th>#</th><th>Nhân viên</th><th>Điểm tổng hợp</th></tr></thead><tbody>`;
+  NVS.map(nv=>({nv,sc2:weightedScore(nv.ma,sc,CUR_M)})).filter(x=>x.sc2!==null).sort((a,b)=>b.sc2-a.sc2)
+    .forEach((x,i)=>{ html+=`<tr><td>${i+1}</td><td>${x.nv.ten}</td><td class="pct" style="color:${pCol2(x.sc2)}">${x.sc2}%</td></tr>`; });
+  html+=`</tbody></table><div class="sig">Hệ thống KPI KHDN · Nam A Bank</div></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);
+};
+
+</script>
+</body>
+</html>
