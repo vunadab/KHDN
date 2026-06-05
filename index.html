@@ -39,7 +39,6 @@ body.light{
 }
 /* Light mode card nền hơi khác bg để phân tách */
 body.light .kc,body.light .widget,body.light .al-item,body.light .star-hero{background:#f3f6fb}
-body.light .hero-cell{background:#f3f6fb}
 body.light .ff{background:#f3f6fb}
 body.light .bk-item,body.light .bk-add-form{background:#f3f6fb}
 html,body{background:var(--bg);color:var(--t1);font-family:var(--font);min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
@@ -128,7 +127,7 @@ body.light .nav{background:rgba(240,244,250,.97)}
 @keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── SECTION ── */
-.sec{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;padding:14px 14px 8px}
+.sec{display:flex;align-items:center;gap:7px;font-size:9.5px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;padding:14px 14px 8px}
 .sec::after{content:'';flex:1;height:1px;background:var(--line)}
 
 /* ── SCROLL TABS ── */
@@ -138,30 +137,26 @@ body.light .nav{background:rgba(240,244,250,.97)}
 .stab.on{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-dim)}
 
 /* ── DASHBOARD ── */
-.hero-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line)}
-.hero-cell{background:var(--bg1);padding:11px 12px}
-body.light .hero-cell{background:#fff}
-.hc-lbl{font-size:8.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:3px}
-.hc-val{font-size:18px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em;line-height:1}
-.hc-pct{font-size:10px;font-weight:700;margin-top:3px}
-.hc-bar{height:2px;border-radius:1px;background:var(--line);margin-top:5px}
-.hc-fill{height:2px;border-radius:1px;transition:width .8s}
+/* hero-row removed */
 
-.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 14px 4px}
-.kc{background:var(--bg1);border-radius:14px;padding:13px 12px 12px;border:1px solid var(--line);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:0}
-body.light .kc{box-shadow:0 2px 12px rgba(0,30,80,.09)}
-.kc-row1{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px}
-.kc-left{flex:1;min-width:0}
-.kc-lbl{font-size:9px;color:var(--t2);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kc-val{font-size:20px;font-weight:800;font-family:var(--mono);letter-spacing:-.02em;line-height:1.1}
-.kc-unit{font-size:10px;color:var(--t2);margin-top:2px}
-.kc-ring{flex-shrink:0;margin-left:6px}
-.kc-bar{height:3px;border-radius:2px;background:var(--line);margin-top:8px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 6px}
+.kc{background:var(--bg2);border-radius:14px;padding:14px 13px 12px;border:1px solid var(--line2);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:0;transition:border-color .15s}
+.kc:active{transform:scale(.98)}
+body.light .kc{background:#fff;box-shadow:0 2px 12px rgba(0,30,80,.10);border-color:var(--line)}
+/* Light mode: ring track rõ hơn */
+body.light .kc circle:first-child{stroke:rgba(0,40,100,.12)!important}
+.kc-row1{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.kc-left{flex:1;min-width:0;padding-right:4px}
+.kc-lbl{font-size:9.5px;color:var(--t1);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.75}
+.kc-val{font-size:22px;font-weight:800;font-family:var(--mono);letter-spacing:-.03em;line-height:1.05}
+.kc-unit{font-size:10px;color:var(--t2);margin-top:3px;font-weight:600}
+.kc-ring{flex-shrink:0;margin-left:4px}
+.kc-bar{height:3px;border-radius:2px;background:var(--line2);margin-top:10px}
 .kc-fill{height:3px;border-radius:2px;transition:width .9s}
-.kc-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
-.kc-kh{font-size:9.5px;color:var(--t3)}
-.kc-pct{font-size:11px;font-weight:800}
-.kc-star{position:absolute;top:8px;left:8px;font-size:9px;line-height:1}
+.kc-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.kc-kh{font-size:10px;color:var(--t2);font-weight:600}
+.kc-pct{font-size:12px;font-weight:800}
+.kc-star{position:absolute;top:9px;left:10px;font-size:10px;line-height:1;color:var(--amber)}
 
 .rtable{padding:0 14px}
 .rth{display:grid;grid-template-columns:24px 1fr 48px 48px 52px;gap:5px;padding:5px 8px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--line)}
@@ -181,8 +176,8 @@ body.light .widget{box-shadow:0 2px 10px rgba(0,30,80,.07)}
 .wb{padding:9px 13px 12px}
 .spark-group{margin-bottom:8px}
 .spark-bars{display:flex;gap:3px;align-items:flex-end;height:34px;margin:4px 0 2px}
-.spark-bar{flex:1;border-radius:3px 3px 0 0;min-height:6px;transition:height .5s}
-.spark-bars{position:relative}
+.spark-bar{flex:1;border-radius:3px 3px 0 0;min-height:8px;transition:height .5s}
+.spark-bars{position:relative;height:52px;display:flex;gap:3px;align-items:flex-end}
 .spark-zero-line{position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--line2)}
 .spark-lbls{display:flex;gap:3px}
 .spark-lbl{flex:1;font-size:7.5px;color:var(--t3);text-align:center;font-weight:600}
@@ -479,7 +474,6 @@ body.light #pwa-banner{box-shadow:0 4px 16px rgba(0,30,80,.15)}
     <button class="stab" onclick="setScope(this,'T3')">Tuần 3</button>
     <button class="stab" onclick="setScope(this,'T4')">Tuần 4</button>
   </div>
-  <div class="hero-row" id="heroRow"></div>
   <div class="sec">Tất cả chỉ tiêu</div>
   <div class="kpi-grid" id="kpiRow"></div>
   <div class="sec">Tiến độ tuần</div>
@@ -637,7 +631,16 @@ const fbPush = async (path,val) => { try { const r = await push(ref(db,path),val
 
 function fmt(v,u){ return isNaN(v)?'—':parseFloat(v).toLocaleString('vi-VN')+(u?' '+u:''); }
 function pct(v,kh){ return kh>0?Math.round(v/kh*100):null; }
-function pCol(p){ if(p===null)return'var(--t3)'; if(p>=100)return'var(--green)'; if(p>=70)return'var(--amber)'; if(p>=40)return'#f97316'; return'var(--red)'; }
+function pCol(p,th){
+  if(p===null)return'var(--t3)';
+  // Nếu chưa có data (th=0 và p=0) → màu neutral, không đỏ
+  if(p===0&&(th===0||th===undefined||th===null))return'var(--t3)';
+  if(p>=100)return'var(--green)';
+  if(p>=70)return'var(--amber)';
+  if(p>=50)return'#f97316';
+  if(p>=25)return'#ef4444';
+  return'var(--red)';
+}
 function stL(p){ if(p===null)return'—'; if(p>=100)return'✅ Đạt'; if(p>=70)return'⚡ Tốt'; if(p>=40)return'⚠ TB'; return'🚨 Yếu'; }
 
 const CUR_M = (()=>{ const d=new Date(); return d.getFullYear()+'_'+(d.getMonth()+1).toString().padStart(2,'0'); })();
@@ -795,14 +798,17 @@ function buildMonthSelect(){
   const now=new Date();
   const curY=now.getFullYear(),curMo=now.getMonth()+1;
   const opts=[];
-  // Chỉ từ T6/2026 (tháng bắt đầu dùng app) đến tháng hiện tại
+  // Từ T6/2026 → hết năm sau (cho phép set KH kế hoạch)
   const START_YEAR=2026,START_MONTH=6;
-  for(let y=START_YEAR;y<=curY;y++){
+  const END_YEAR=curY+1,END_MONTH=12;
+  for(let y=START_YEAR;y<=END_YEAR;y++){
     const minM=(y===START_YEAR)?START_MONTH:1;
-    const maxM=(y===curY)?curMo:12;
+    const maxM=(y===END_YEAR)?END_MONTH:12;
     for(let m=minM;m<=maxM;m++){
       const key=y+'_'+m.toString().padStart(2,'0');
-      const lbl='T'+m+'/'+y;
+      const isCur=(y===curY&&m===curMo);
+      const isFut=(y>curY||(y===curY&&m>curMo));
+      const lbl=`T${m}/${y}${isCur?' ◉':''}${isFut?' (KH)':''}`;
       const isSel=key===S.month?' selected':'';
       opts.push(`<option value="${key}"${isSel}>${lbl}</option>`);
     }
@@ -927,26 +933,18 @@ function weightedScore(ma,sc,m){
 // ════════════════════════════════════════════
 function renderDash(){
   const starKPIs=KPIS.filter(k=>k.star);
-  // Hero
-  const hr=document.getElementById('heroRow');
-  if(hr) hr.innerHTML=starKPIs.map(k=>{
-    const th=thForAll(k,S.scope,S.month),kh=khFor(k),p=pct(th,kh),c=pCol(p);
-    return `<div class="hero-cell"><div class="hc-lbl">${k.icon} ${k.lbl}</div>
-      <div class="hc-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div>
-      <div class="hc-pct" style="color:${c}">${p!==null?p+'%':'—'}</div>
-      <div class="hc-bar"><div class="hc-fill" style="width:${Math.min(100,p||0)}%;background:${c}"></div></div></div>`;
-  }).join('');
   // KPI cards — donut ring style
   const kr=document.getElementById('kpiRow');
   if(kr) kr.innerHTML=KPIS.map(k=>{
-    const th=thForAll(k,S.scope,S.month),kh=khFor(k),p=pct(th,kh)||0,c=pCol(p);
-    const R=26,SW=5,circ=2*Math.PI*R,dash=Math.min(1,p/100)*circ;
-    const ring=`<svg width="62" height="62" viewBox="0 0 62 62" style="transform:rotate(-90deg)">
-      <circle cx="31" cy="31" r="${R}" fill="none" stroke="var(--line2)" stroke-width="${SW}"/>
-      <circle cx="31" cy="31" r="${R}" fill="none" stroke="${c}" stroke-width="${SW}"
-        stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
+    const th=thForAll(k,S.scope,S.month),kh=khFor(k),p=pct(th,kh)||0,c=pCol(p,th);
+    const R=27,SW=5.5,circ=2*Math.PI*R,dash=p>0?Math.min(1,p/100)*circ:0;
+    // Track color: tối hơn trong dark, sáng hơn trong light để thấy rõ
+    const ring=`<svg width="64" height="64" viewBox="0 0 64 64" style="transform:rotate(-90deg)">
+      <circle cx="32" cy="32" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="${SW}"/>
+      <circle cx="32" cy="32" r="${R}" fill="none" stroke="${c}" stroke-width="${SW}"
+        stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round" opacity="${p>0?1:.35}"/>
       </svg>
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:800;color:${c};font-family:var(--mono);white-space:nowrap">${p}%</div>`;
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:800;color:${c};font-family:var(--mono);white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.4)">${p>0?p+'%':'—'}</div>`;
     return `<div class="kc">
       ${k.star?'<div class="kc-star">★</div>':''}
       <div class="kc-row1">
@@ -955,7 +953,7 @@ function renderDash(){
           <div class="kc-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div>
           <div class="kc-unit">${k.unit}</div>
         </div>
-        <div class="kc-ring" style="position:relative;width:62px;height:62px;flex-shrink:0">${ring}</div>
+        <div class="kc-ring" style="position:relative;width:64px;height:64px;flex-shrink:0">${ring}</div>
       </div>
       <div class="kc-bar"><div class="kc-fill" style="width:${Math.min(100,p)}%;background:${c}"></div></div>
       <div class="kc-bottom">
@@ -997,7 +995,7 @@ function renderDash(){
   // Rank
   const rr=document.getElementById('rankRows');
   if(rr){
-    const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.scope,S.month)}))
+    const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.scope,S.month),_th:1}))
       .sort((a,b)=>(b.sc||0)-(a.sc||0));
     const k0=KPIS[0],k1=KPIS[1];
     rr.innerHTML=sorted.map((x,i)=>{
