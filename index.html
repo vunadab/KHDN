@@ -29,13 +29,19 @@
   --sh:0 4px 20px rgba(0,0,0,.35);
 }
 body.light{
-  --bg:#f0f4fa; --bg1:#ffffff; --bg2:#f7f9fd; --bg3:#edf1f8; --bg4:#e3e9f3;
-  --line:rgba(0,40,100,.08); --line2:rgba(0,40,100,.14); --line3:rgba(0,40,100,.22);
-  --teal:#009d87; --teal2:#00b89e; --teal-bg:rgba(0,157,135,.08); --teal-dim:rgba(0,157,135,.2);
-  --green:#059669; --amber:#d97706; --red:#e11d48; --blue:#2563eb; --sky:#0284c7; --violet:#7c3aed;
-  --t1:#0f172a; --t2:#475569; --t3:#94a3b8;
-  --sh:0 4px 20px rgba(0,30,80,.10);
+  /* Nền: xám xanh nhẹ — không trắng chói, dễ nhìn cả ngày */
+  --bg:#e8eef7; --bg1:#f3f6fb; --bg2:#eaf0f9; --bg3:#dde6f2; --bg4:#d0dcea;
+  --line:rgba(30,60,120,.09); --line2:rgba(30,60,120,.15); --line3:rgba(30,60,120,.22);
+  --teal:#007a6a; --teal2:#009982; --teal-bg:rgba(0,122,106,.08); --teal-dim:rgba(0,122,106,.22);
+  --green:#047857; --amber:#b45309; --red:#be123c; --blue:#1d4ed8; --sky:#0369a1; --violet:#6d28d9;
+  --t1:#1e2a3b; --t2:#3d5068; --t3:#7a93ad;
+  --sh:0 3px 16px rgba(20,50,100,.13);
 }
+/* Light mode card nền hơi khác bg để phân tách */
+body.light .kc,body.light .widget,body.light .al-item,body.light .star-hero{background:#f3f6fb}
+body.light .hero-cell{background:#f3f6fb}
+body.light .ff{background:#f3f6fb}
+body.light .bk-item,body.light .bk-add-form{background:#f3f6fb}
 html,body{background:var(--bg);color:var(--t1);font-family:var(--font);min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
 button,input,select,textarea{font-family:var(--font);cursor:pointer}
 
@@ -141,18 +147,21 @@ body.light .hero-cell{background:#fff}
 .hc-bar{height:2px;border-radius:1px;background:var(--line);margin-top:5px}
 .hc-fill{height:2px;border-radius:1px;transition:width .8s}
 
-.kpi-row{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:0 14px 4px}
-.kpi-row::-webkit-scrollbar{display:none}
-.kc{flex-shrink:0;width:152px;background:var(--bg1);border-radius:13px;padding:13px;border:1px solid var(--line);position:relative;overflow:hidden}
-body.light .kc{box-shadow:0 2px 10px rgba(0,30,80,.07)}
-.kc-top{height:2px;border-radius:13px 13px 0 0;position:absolute;top:0;left:0;right:0}
-.kc-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:8px}
-.kc-lbl{font-size:9.5px;color:var(--t2);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
-.kc-val{font-size:19px;font-weight:700;font-family:var(--mono);letter-spacing:-.02em;line-height:1}
-.kc-kh{font-size:9.5px;color:var(--t3);margin:3px 0 7px}
-.kc-bar{height:3px;border-radius:2px;background:var(--line)}
-.kc-fill{height:3px;border-radius:2px;transition:width .8s}
-.kc-pct{font-size:11px;font-weight:800;text-align:right;margin-top:4px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 14px 4px}
+.kc{background:var(--bg1);border-radius:14px;padding:13px 12px 12px;border:1px solid var(--line);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:0}
+body.light .kc{box-shadow:0 2px 12px rgba(0,30,80,.09)}
+.kc-row1{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px}
+.kc-left{flex:1;min-width:0}
+.kc-lbl{font-size:9px;color:var(--t2);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kc-val{font-size:20px;font-weight:800;font-family:var(--mono);letter-spacing:-.02em;line-height:1.1}
+.kc-unit{font-size:10px;color:var(--t2);margin-top:2px}
+.kc-ring{flex-shrink:0;margin-left:6px}
+.kc-bar{height:3px;border-radius:2px;background:var(--line);margin-top:8px}
+.kc-fill{height:3px;border-radius:2px;transition:width .9s}
+.kc-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:5px}
+.kc-kh{font-size:9.5px;color:var(--t3)}
+.kc-pct{font-size:11px;font-weight:800}
+.kc-star{position:absolute;top:8px;left:8px;font-size:9px;line-height:1}
 
 .rtable{padding:0 14px}
 .rth{display:grid;grid-template-columns:24px 1fr 48px 48px 52px;gap:5px;padding:5px 8px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--line)}
@@ -316,6 +325,14 @@ body.light .zalo-msg{background:var(--bg3)}
 
 /* ── MISC ── */
 .empty{text-align:center;padding:28px 16px;color:var(--t3);font-size:13px}
+/* PWA Install Banner */
+#pwa-banner{display:none;position:fixed;bottom:82px;left:50%;transform:translateX(-50%);
+  width:calc(100% - 28px);max-width:402px;z-index:200;
+  background:var(--bg2);border:1px solid var(--teal-dim);border-radius:14px;
+  padding:11px 14px;align-items:center;gap:11px;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+body.light #pwa-banner{box-shadow:0 4px 16px rgba(0,30,80,.15)}
+#pwa-banner.show{display:flex;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(16px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 .online-dot{width:5px;height:5px;border-radius:50%;display:inline-block}
 </style>
 </head>
@@ -464,7 +481,7 @@ body.light .zalo-msg{background:var(--bg3)}
   </div>
   <div class="hero-row" id="heroRow"></div>
   <div class="sec">Tất cả chỉ tiêu</div>
-  <div class="kpi-row" id="kpiRow"></div>
+  <div class="kpi-grid" id="kpiRow"></div>
   <div class="sec">Tiến độ tuần</div>
   <div class="widget"><div class="wb" id="sparkW"></div></div>
   <div class="sec">Dự báo Pipeline</div>
@@ -555,6 +572,17 @@ body.light .zalo-msg{background:var(--bg3)}
 </main>
 
 <!-- NAV -->
+<!-- PWA Install Banner -->
+<div id="pwa-banner">
+  <div style="width:38px;height:38px;border-radius:10px;background:var(--teal-bg);border:1px solid var(--teal-dim);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📲</div>
+  <div style="flex:1;min-width:0">
+    <div style="font-size:13px;font-weight:700">Cài app lên điện thoại</div>
+    <div style="font-size:10.5px;color:var(--t2);margin-top:1px">Dùng như app thật, không cần mạng</div>
+  </div>
+  <button id="pwa-install-btn" onclick="installPWA()" style="padding:7px 13px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--teal),var(--teal2));color:#06100e;font-weight:800;font-size:12px;font-family:var(--font);white-space:nowrap">Cài</button>
+  <button onclick="dismissPWA()" style="width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);background:transparent;color:var(--t2);font-size:14px;flex-shrink:0">✕</button>
+</div>
+
 <nav class="nav">
   <button class="nb" id="nb-nhap"     onclick="setTab('nhap')">    <div class="nb-line"></div><span class="nb-ic">✏️</span>Nhập</button>
   <button class="nb" id="nb-pipeline" onclick="setTab('pipeline')"><div class="nb-line"></div><span class="nb-ic">📋</span>Pipeline</button>
@@ -765,18 +793,18 @@ function updatePinDots(){
 function buildMonthSelect(){
   const sel=document.getElementById('monthSelect');if(!sel)return;
   const now=new Date();
-  const curY=now.getFullYear();
+  const curY=now.getFullYear(),curMo=now.getMonth()+1;
   const opts=[];
-  // 12 tháng năm nay + 6 tháng năm trước
-  for(let y=curY-1;y<=curY;y++){
-    const maxM = y===curY ? now.getMonth()+1 : 12;
-    const minM = y===curY-1 ? now.getMonth()+1-1 : 1; // 6 tháng trước
-    const startM = Math.max(1, y===curY-1 ? now.getMonth()-4 : 1);
-    for(let m=startM;m<=maxM;m++){
+  // Chỉ từ T6/2026 (tháng bắt đầu dùng app) đến tháng hiện tại
+  const START_YEAR=2026,START_MONTH=6;
+  for(let y=START_YEAR;y<=curY;y++){
+    const minM=(y===START_YEAR)?START_MONTH:1;
+    const maxM=(y===curY)?curMo:12;
+    for(let m=minM;m<=maxM;m++){
       const key=y+'_'+m.toString().padStart(2,'0');
       const lbl='T'+m+'/'+y;
-      const sel2=key===S.month?' selected':'';
-      opts.push(`<option value="${key}"${sel2}>${lbl}</option>`);
+      const isSel=key===S.month?' selected':'';
+      opts.push(`<option value="${key}"${isSel}>${lbl}</option>`);
     }
   }
   sel.innerHTML=opts.join('');
@@ -908,17 +936,32 @@ function renderDash(){
       <div class="hc-pct" style="color:${c}">${p!==null?p+'%':'—'}</div>
       <div class="hc-bar"><div class="hc-fill" style="width:${Math.min(100,p||0)}%;background:${c}"></div></div></div>`;
   }).join('');
-  // KPI cards
+  // KPI cards — donut ring style
   const kr=document.getElementById('kpiRow');
   if(kr) kr.innerHTML=KPIS.map(k=>{
-    const th=thForAll(k,S.scope,S.month),kh=khFor(k),p=pct(th,kh),c=pCol(p);
-    return `<div class="kc"><div class="kc-top" style="background:${c}"></div>
-      <div class="kc-icon" style="background:${k.color}18">${k.icon}</div>
-      <div class="kc-lbl">${k.lbl}${k.star?' ★':''}</div>
-      <div class="kc-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div>
-      <div class="kc-kh">KH: ${fmt(kh,k.unit)}</div>
-      <div class="kc-bar"><div class="kc-fill" style="width:${Math.min(100,p||0)}%;background:${c}"></div></div>
-      <div class="kc-pct" style="color:${c}">${p!==null?p+'%':'—'}</div></div>`;
+    const th=thForAll(k,S.scope,S.month),kh=khFor(k),p=pct(th,kh)||0,c=pCol(p);
+    const R=26,SW=5,circ=2*Math.PI*R,dash=Math.min(1,p/100)*circ;
+    const ring=`<svg width="62" height="62" viewBox="0 0 62 62" style="transform:rotate(-90deg)">
+      <circle cx="31" cy="31" r="${R}" fill="none" stroke="var(--line2)" stroke-width="${SW}"/>
+      <circle cx="31" cy="31" r="${R}" fill="none" stroke="${c}" stroke-width="${SW}"
+        stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
+      </svg>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:800;color:${c};font-family:var(--mono);white-space:nowrap">${p}%</div>`;
+    return `<div class="kc">
+      ${k.star?'<div class="kc-star">★</div>':''}
+      <div class="kc-row1">
+        <div class="kc-left">
+          <div class="kc-lbl">${k.icon} ${k.lbl}</div>
+          <div class="kc-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div>
+          <div class="kc-unit">${k.unit}</div>
+        </div>
+        <div class="kc-ring" style="position:relative;width:62px;height:62px;flex-shrink:0">${ring}</div>
+      </div>
+      <div class="kc-bar"><div class="kc-fill" style="width:${Math.min(100,p)}%;background:${c}"></div></div>
+      <div class="kc-bottom">
+        <div class="kc-kh">KH: ${fmt(kh,k.unit)}</div>
+        <div class="kc-pct" style="color:${c}">${p}%</div>
+      </div></div>`;
   }).join('');
   // Spark
   const sw=document.getElementById('sparkW');
@@ -1559,6 +1602,37 @@ window.openExport=function(){
   const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);
 };
 
+
+// ── PWA INSTALL PROMPT (Android Chrome) ──
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Hiện banner sau 3 giây nếu chưa cài
+  setTimeout(() => {
+    const banner = document.getElementById('pwa-banner');
+    if(banner && deferredPrompt) banner.classList.add('show');
+  }, 3000);
+});
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const b = document.getElementById('pwa-banner');
+  if(b) b.classList.remove('show');
+});
+window.installPWA = async function() {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const {outcome} = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  const b = document.getElementById('pwa-banner');
+  if(b) b.classList.remove('show');
+};
+window.dismissPWA = function() {
+  const b = document.getElementById('pwa-banner');
+  if(b) b.classList.remove('show');
+  // Không hiện lại trong session này
+  deferredPrompt = null;
+};
 
 // ── PWA SERVICE WORKER REGISTRATION ──
 if('serviceWorker' in navigator){
