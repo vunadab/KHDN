@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KPI KHDN">
 <meta name="theme-color" content="#080c14">
+<link rel="manifest" href="manifest.json">
 <title>KPI KHDN · Nam A Bank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -395,7 +396,7 @@ body.light .zalo-msg{background:var(--bg3)}
       </div>
       <div class="hdr-right">
         <button class="teal-btn" onclick="openExport()">↑ PDF</button>
-        <button class="ico-btn" onclick="openZalo()">⇪</button>
+        <button onclick="openZalo()" style="padding:5px 11px;border-radius:8px;border:1px solid rgba(0,104,255,.3);background:rgba(0,104,255,.12);color:#3b9eff;font-size:11px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:4px"><span style="font-size:15px">📤</span>Zalo</button>
         <button class="ico-btn" id="themeBtn" onclick="toggleTheme()">☀</button>
         <button class="ico-btn" onclick="doSignOut()" title="Đăng xuất" style="font-size:12px">↩</button>
       </div>
@@ -406,6 +407,10 @@ body.light .zalo-msg{background:var(--bg3)}
     <span class="badge" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-dim)" id="badgeMonth"></span>
     <span class="badge" style="background:var(--bg3);color:var(--t2);border:1px solid var(--line2)" id="badgeTuan"></span>
     <span class="badge" style="background:var(--bg3);color:var(--t3);border:1px solid var(--line)" id="badgeDate"></span>
+    <span style="flex-shrink:0">
+      <select id="monthSelect" onchange="changeMonth(this.value)" style="background:var(--bg3);color:var(--teal);border:1px solid var(--teal-dim);border-radius:6px;padding:3px 6px;font-size:10px;font-weight:700;outline:none;font-family:var(--font);cursor:pointer;-webkit-appearance:none;min-width:60px">
+      </select>
+    </span>
     <span class="badge" style="background:rgba(244,63,94,.08);color:var(--red);border:1px solid rgba(244,63,94,.2)" id="alertBadge" style="display:none"></span>
   </div>
 </header>
@@ -554,6 +559,12 @@ const app  = initializeApp(FB_CONFIG);
 const auth = getAuth(app);
 const db   = getDatabase(app);
 
+// ── REALTIME ONLINE DETECTION ──
+onValue(ref(db,'.info/connected'), snap => {
+  S.online = snap.val() === true;
+  updateOnlineBadge();
+});
+
 // ════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════
@@ -573,7 +584,7 @@ const CUR_T = (()=>{ const d=new Date().getDate(); return d<=7?'T1':d<=14?'T2':d
 // STATE
 // ════════════════════════════════════════════
 const S = {
-  tab:'dash', scope:'thang', tuan:CUR_T,
+  tab:'dash', scope:'thang', tuan:CUR_T, month:CUR_M,
   plTab:'nv', plNV:null, editDealId:null,
   starScope:'thang', khTab:'phong',
   dark:true, pinOk:false, pendingTab:null,
@@ -615,16 +626,17 @@ function gTH(m,t,ma){ return ((S.thTuan[m||CUR_M]||{})[t]||{})[ma]||{}; }
 function gPL(m,ma){ return ((S.pipeline[m||CUR_M]||{})[ma])||{}; }
 
 async function loadAll(){
+  const m=S.month||CUR_M;
   const [kp,kt,th,pl,nvs,kpis,cfg] = await Promise.all([
-    fbGet('khPhong/'+CUR_M), fbGet('khTuan/'+CUR_M),
-    fbGet('thTuan/'+CUR_M),  fbGet('pipeline/'+CUR_M),
+    fbGet('khPhong/'+m), fbGet('khTuan/'+m),
+    fbGet('thTuan/'+m),  fbGet('pipeline/'+m),
     fbGet('config/nvs'),     fbGet('config/kpis'),
     fbGet('config/settings'),
   ]);
-  if(kp) S.khPhong[CUR_M]=kp;
-  if(kt) S.khTuan[CUR_M]=kt;
-  if(th) S.thTuan[CUR_M]=th;
-  if(pl) S.pipeline[CUR_M]=pl;
+  if(kp) S.khPhong[m]=kp;
+  if(kt) S.khTuan[m]=kt;
+  if(th) S.thTuan[m]=th;
+  if(pl) S.pipeline[m]=pl;
   if(nvs && Array.isArray(nvs) && nvs.length) NVS=nvs;
   if(kpis && Array.isArray(kpis) && kpis.length) KPIS=kpis;
   S.online=!!(kp||kt||th||pl);
@@ -713,12 +725,53 @@ function updatePinDots(){
 // ════════════════════════════════════════════
 // HEADER / THEME
 // ════════════════════════════════════════════
+function buildMonthSelect(){
+  const sel=document.getElementById('monthSelect');if(!sel)return;
+  const now=new Date();
+  const curY=now.getFullYear();
+  const opts=[];
+  // 12 tháng năm nay + 6 tháng năm trước
+  for(let y=curY-1;y<=curY;y++){
+    const maxM = y===curY ? now.getMonth()+1 : 12;
+    const minM = y===curY-1 ? now.getMonth()+1-1 : 1; // 6 tháng trước
+    const startM = Math.max(1, y===curY-1 ? now.getMonth()-4 : 1);
+    for(let m=startM;m<=maxM;m++){
+      const key=y+'_'+m.toString().padStart(2,'0');
+      const lbl='T'+m+'/'+y;
+      const sel2=key===S.month?' selected':'';
+      opts.push(`<option value="${key}"${sel2}>${lbl}</option>`);
+    }
+  }
+  sel.innerHTML=opts.join('');
+}
+
+window.changeMonth=async function(m){
+  S.month=m;
+  // Load data cho tháng mới nếu chưa có
+  if(!S.khPhong[m]||!S.thTuan[m]){
+    const [kp,kt,th,pl]=await Promise.all([
+      fbGet('khPhong/'+m),fbGet('khTuan/'+m),
+      fbGet('thTuan/'+m),fbGet('pipeline/'+m),
+    ]);
+    if(kp)S.khPhong[m]=kp; else if(!S.khPhong[m])S.khPhong[m]={};
+    if(kt)S.khTuan[m]=kt;  else if(!S.khTuan[m])S.khTuan[m]={};
+    if(th)S.thTuan[m]=th;  else if(!S.thTuan[m])S.thTuan[m]={};
+    if(pl)S.pipeline[m]=pl;else if(!S.pipeline[m])S.pipeline[m]={};
+  }
+  // Update header badge
+  const parts=m.split('_');
+  document.getElementById('badgeMonth').textContent='T'+parseInt(parts[1])+'/'+parts[0];
+  // Re-render current tab
+  ({dash:renderDash,nhap:renderNhap,pipeline:renderPipeline,star:renderStar,alert:renderAlerts,kh:renderKH}[S.tab]||renderDash)();
+};
+
 function updateHeader(){
   const now=new Date();
   const months=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
   document.getElementById('badgeMonth').textContent=months[now.getMonth()]+'/'+now.getFullYear();
   document.getElementById('badgeTuan').textContent='Tuần '+CUR_T;
   document.getElementById('badgeDate').textContent=now.getDate().toString().padStart(2,'0')+'/'+(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getFullYear().toString().slice(-2);
+  buildMonthSelect();
 }
 function updateOnlineBadge(){
   const b=document.getElementById('onlineBadge');
@@ -788,7 +841,7 @@ function renderDash(){
   // Hero
   const hr=document.getElementById('heroRow');
   if(hr) hr.innerHTML=starKPIs.map(k=>{
-    const th=thForAll(k,S.scope,CUR_M),kh=khFor(k),p=pct(th,kh),c=pCol(p);
+    const th=thForAll(k,S.scope,S.month),kh=khFor(k),p=pct(th,kh),c=pCol(p);
     return `<div class="hero-cell"><div class="hc-lbl">${k.icon} ${k.lbl}</div>
       <div class="hc-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div>
       <div class="hc-pct" style="color:${c}">${p!==null?p+'%':'—'}</div>
@@ -797,7 +850,7 @@ function renderDash(){
   // KPI cards
   const kr=document.getElementById('kpiRow');
   if(kr) kr.innerHTML=KPIS.map(k=>{
-    const th=thForAll(k,S.scope,CUR_M),kh=khFor(k),p=pct(th,kh),c=pCol(p);
+    const th=thForAll(k,S.scope,S.month),kh=khFor(k),p=pct(th,kh),c=pCol(p);
     return `<div class="kc"><div class="kc-top" style="background:${c}"></div>
       <div class="kc-icon" style="background:${k.color}18">${k.icon}</div>
       <div class="kc-lbl">${k.lbl}${k.star?' ★':''}</div>
@@ -809,7 +862,7 @@ function renderDash(){
   // Spark
   const sw=document.getElementById('sparkW');
   if(sw) sw.innerHTML=starKPIs.map(k=>{
-    const wkVals=['T1','T2','T3','T4'].map(t=>NVS.reduce((s,nv)=>s+(gTH(CUR_M,t,nv.ma)[k.key]||0),0));
+    const wkVals=['T1','T2','T3','T4'].map(t=>NVS.reduce((s,nv)=>s+(gTH(S.month,t,nv.ma)[k.key]||0),0));
     const mx=Math.max(...wkVals,1);
     return `<div class="spark-group">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-size:11px">${k.icon}</span><span style="font-size:11px;font-weight:700">${k.lbl}</span></div>
@@ -819,10 +872,10 @@ function renderDash(){
   // Forecast (pipeline giá trị)
   const fc=document.getElementById('fcW');
   if(fc){
-    const allDeals=NVS.flatMap(nv=>Object.values(gPL(CUR_M,nv.ma)||{}));
+    const allDeals=NVS.flatMap(nv=>Object.values(gPL(S.month,nv.ma)||{}));
     fc.innerHTML=starKPIs.map(k=>{
       const pipe=allDeals.filter(d=>d.kpiKey===k.key&&d.stage!=='hoan_tat').reduce((s,d)=>s+(d.value||0),0);
-      const cur=thForAll(k,S.scope,CUR_M);
+      const cur=thForAll(k,S.scope,S.month);
       const projected=cur+pipe;
       const p2=pct(projected,k.kh),c=pCol(p2);
       return `<div class="fc-row"><div class="fc-ic">${k.icon}</div>
@@ -833,13 +886,13 @@ function renderDash(){
   // Rank
   const rr=document.getElementById('rankRows');
   if(rr){
-    const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.scope,CUR_M)}))
+    const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.scope,S.month)}))
       .sort((a,b)=>(b.sc||0)-(a.sc||0));
     const k0=KPIS[0],k1=KPIS[1];
     rr.innerHTML=sorted.map((x,i)=>{
       const c=pCol(x.sc),st=stL(x.sc);
-      const dn=pct(thFor(k0,x.nv.ma,S.scope,CUR_M),khFor(k0));
-      const hd=pct(thFor(k1,x.nv.ma,S.scope,CUR_M),khFor(k1));
+      const dn=pct(thFor(k0,x.nv.ma,S.scope,S.month),khFor(k0));
+      const hd=pct(thFor(k1,x.nv.ma,S.scope,S.month),khFor(k1));
       return `<div class="rtr"><div class="rn">${i+1}</div>
         <div class="rname-w"><div class="rav" style="background:${x.nv.col}18;color:${x.nv.col}">${x.nv.ten.split(' ').pop()[0]}</div>
         <div><div class="rname">${x.nv.ten.split(' ').slice(-2).join(' ')}</div><div class="rsub">${st}</div></div></div>
@@ -856,8 +909,8 @@ function renderDash(){
 function renderNhap(){
   const el=document.getElementById('nvList');if(!el)return;
   el.innerHTML=NVS.map(nv=>{
-    const th=gTH(CUR_M,S.tuan,nv.ma);
-    const kh=gKT(CUR_M,S.tuan,nv.ma);
+    const th=gTH(S.month,S.tuan,nv.ma);
+    const kh=gKT(S.month,S.tuan,nv.ma);
     const hasKH=KPIS.some(k=>kh[k.key]!=null);
     const hasTH=KPIS.some(k=>th[k.key]!=null);
     const statusColor=hasTH?'var(--green)':hasKH?'var(--amber)':'var(--t3)';
@@ -874,8 +927,8 @@ function renderNhap(){
 window.openNhapForm=function(ma){
   const nv=NVS.find(n=>n.ma===ma);if(!nv)return;
   S.formNV=ma;
-  const th=gTH(CUR_M,S.tuan,ma);
-  const kh=gKT(CUR_M,S.tuan,ma);
+  const th=gTH(S.month,S.tuan,ma);
+  const kh=gKT(S.month,S.tuan,ma);
   const el=document.getElementById('nhapForm');if(!el)return;
   el.innerHTML=`<div style="padding:11px 14px;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px">
     <div class="nv-av" style="width:42px;height:42px;background:${nv.col}18;color:${nv.col};font-size:16px">${nv.ten.split(' ').pop()[0]}</div>
@@ -907,10 +960,10 @@ window.saveTH=async function(){
   data._ts=Date.now();
   const btn=document.getElementById('btnSaveTH');
   btn.textContent='Đang lưu...';btn.disabled=true;
-  const ok=await fbSet(`thTuan/${CUR_M}/${S.tuan}/${ma}`,data);
-  if(!S.thTuan[CUR_M])S.thTuan[CUR_M]={};
-  if(!S.thTuan[CUR_M][S.tuan])S.thTuan[CUR_M][S.tuan]={};
-  S.thTuan[CUR_M][S.tuan][ma]=data;
+  const ok=await fbSet(`thTuan/${S.month}/${S.tuan}/${ma}`,data);
+  if(!S.thTuan[S.month])S.thTuan[S.month]={};
+  if(!S.thTuan[S.month][S.tuan])S.thTuan[S.month][S.tuan]={};
+  S.thTuan[S.month][S.tuan][ma]=data;
   btn.textContent=ok?'✅ Đã lưu!':'❌ Lỗi — thử lại';
   btn.disabled=false;
   setTimeout(()=>setTab('nhap'),1200);
@@ -923,7 +976,7 @@ function renderPipeline(){
   const el=document.getElementById('plContent');if(!el)return;
   if(S.plTab==='nv'){
     el.innerHTML=NVS.map(nv=>{
-      const deals=Object.values(gPL(CUR_M,nv.ma)||{});
+      const deals=Object.values(gPL(S.month,nv.ma)||{});
       const active=deals.filter(d=>d.stage!=='hoan_tat').length;
       const done=deals.filter(d=>d.stage==='hoan_tat').length;
       const over=deals.filter(d=>d.over).length;
@@ -936,7 +989,7 @@ function renderPipeline(){
   } else {
     // Toàn phòng — funnel
     el.innerHTML='<div style="padding-top:4px">'+PL_STAGES.map(st=>{
-      const allDeals=NVS.flatMap(nv=>Object.entries(gPL(CUR_M,nv.ma)||{}).map(([id,d])=>({...d,id,nvMa:nv.ma})));
+      const allDeals=NVS.flatMap(nv=>Object.entries(gPL(S.month,nv.ma)||{}).map(([id,d])=>({...d,id,nvMa:nv.ma})));
       const sd=allDeals.filter(d=>d.stage===st.k);
       const val=sd.reduce((s,d)=>s+(d.value||0),0);
       if(!sd.length)return'';
@@ -960,7 +1013,7 @@ function renderPipeline(){
 window.openPlNV=function(ma){
   S.plNV=ma;
   const nv=NVS.find(n=>n.ma===ma);if(!nv)return;
-  const deals=Object.entries(gPL(CUR_M,ma)||{});
+  const deals=Object.entries(gPL(S.month,ma)||{});
   // Show in pipeline section with back button
   const el=document.getElementById('plContent');if(!el)return;
   el.innerHTML=`<button class="btn-back" onclick="S.plNV=null;renderPipeline()" style="border-bottom:1px solid var(--line)">← Danh sách</button>
@@ -1030,16 +1083,16 @@ window.saveDeal=async function(){
   deal.over=deal.deadline&&new Date(deal.deadline)<now&&deal.stage!=='hoan_tat';
   let ok;
   if(S.editDealId){
-    ok=await fbSet(`pipeline/${CUR_M}/${nvMa}/${S.editDealId}`,deal);
-    if(!S.pipeline[CUR_M])S.pipeline[CUR_M]={};
-    if(!S.pipeline[CUR_M][nvMa])S.pipeline[CUR_M][nvMa]={};
-    S.pipeline[CUR_M][nvMa][S.editDealId]=deal;
+    ok=await fbSet(`pipeline/${S.month}/${nvMa}/${S.editDealId}`,deal);
+    if(!S.pipeline[S.month])S.pipeline[S.month]={};
+    if(!S.pipeline[S.month][nvMa])S.pipeline[S.month][nvMa]={};
+    S.pipeline[S.month][nvMa][S.editDealId]=deal;
   } else {
     const id=await fbPush(`pipeline/${CUR_M}/${nvMa}`,deal);
     if(id){
-      if(!S.pipeline[CUR_M])S.pipeline[CUR_M]={};
-      if(!S.pipeline[CUR_M][nvMa])S.pipeline[CUR_M][nvMa]={};
-      S.pipeline[CUR_M][nvMa][id]=deal;
+      if(!S.pipeline[S.month])S.pipeline[S.month]={};
+      if(!S.pipeline[S.month][nvMa])S.pipeline[S.month][nvMa]={};
+      S.pipeline[S.month][nvMa][id]=deal;
       ok=true;
     }
   }
@@ -1049,8 +1102,8 @@ window.saveDeal=async function(){
 
 window.deleteDeal=async function(nvMa,id){
   if(!confirm('Xóa deal này?'))return;
-  await fbSet(`pipeline/${CUR_M}/${nvMa}/${id}`,null);
-  if(S.pipeline[CUR_M]?.[nvMa]) delete S.pipeline[CUR_M][nvMa][id];
+  await fbSet(`pipeline/${S.month}/${nvMa}/${id}`,null);
+  if(S.pipeline[S.month]?.[nvMa]) delete S.pipeline[S.month][nvMa][id];
   openPlNV(nvMa);
 };
 
@@ -1069,13 +1122,13 @@ function renderAlerts(){
   if(notEntered.length) alerts.push({type:'red',title:`🚨 ${notEntered.length} NV chưa nhập TH (${CUR_T})`,
     body:notEntered.map(nv=>`<div class="al-nv"><div class="rav" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div><span>${nv.ten}</span></div>`).join('')});
   // 2. Deals quá hạn
-  const overDeals=NVS.flatMap(nv=>Object.values(gPL(CUR_M,nv.ma)||{}).filter(d=>d.over).map(d=>({...d,nvTen:nv.ten})));
+  const overDeals=NVS.flatMap(nv=>Object.values(gPL(S.month,nv.ma)||{}).filter(d=>d.over).map(d=>({...d,nvTen:nv.ten})));
   if(overDeals.length) alerts.push({type:'red',title:`⏰ ${overDeals.length} deal Pipeline quá hạn`,
     body:overDeals.map(d=>`<div class="al-nv"><span style="font-size:14px">📋</span><div><div style="font-size:12px;font-weight:700">${d.nvTen}</div><div style="font-size:10px;color:var(--t2)">${d.khName} · Hạn ${d.deadline}</div></div></div>`).join('')});
   // 3. NV dưới 50% KPI trọng điểm
-  const lowNV=NVS.filter(nv=>{ const sc=weightedScore(nv.ma,S.scope,CUR_M); return sc!==null&&sc<50; });
+  const lowNV=NVS.filter(nv=>{ const sc=weightedScore(nv.ma,S.scope,S.month); return sc!==null&&sc<50; });
   if(lowNV.length) alerts.push({type:'amber',title:`⚠️ ${lowNV.length} NV dưới 50% KPI trọng điểm`,
-    body:lowNV.map(nv=>`<div class="al-nv"><div class="rav" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div><span>${nv.ten} — ${weightedScore(nv.ma,S.scope,CUR_M)}%</span></div>`).join('')});
+    body:lowNV.map(nv=>`<div class="al-nv"><div class="rav" style="background:${nv.col}18;color:${nv.col}">${nv.ten.split(' ').pop()[0]}</div><span>${nv.ten} — ${weightedScore(nv.ma,S.scope,S.month)}%</span></div>`).join('')});
 
   const cnt=alerts.length;
   const dot=document.getElementById('alertDot');
@@ -1094,7 +1147,7 @@ function renderAlerts(){
 // ════════════════════════════════════════════
 function renderStar(){
   const el=document.getElementById('starContent');if(!el)return;
-  const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.starScope,CUR_M)}))
+  const sorted=NVS.map(nv=>({nv,sc:weightedScore(nv.ma,S.starScope,S.month)}))
     .filter(x=>x.sc!==null).sort((a,b)=>(b.sc||0)-(a.sc||0));
   if(!sorted.length){el.innerHTML='<div class="empty">Chưa có dữ liệu TH</div>';return;}
   const top=sorted[0];
@@ -1103,7 +1156,7 @@ function renderStar(){
     <div class="sh-top"><span style="font-size:34px">👑</span><div><div class="sh-label">Xuất sắc · ${CUR_M.replace('_','/')} · ${S.starScope==='thang'?'Cả tháng':S.starScope}</div><div class="sh-name">${top.nv.ten}</div></div></div>
     <div class="sh-info"><div class="sh-score">TB KPI trọng điểm: <b>${top.sc}%</b></div></div>
     <div class="sh-kpis">${stars.slice(0,3).map(k=>{
-      const th=thFor(k,top.nv.ma,S.starScope,CUR_M),kh=khFor(k,S.starScope),p=pct(th,kh),c=pCol(p);
+      const th=thFor(k,top.nv.ma,S.starScope,S.month),kh=khFor(k,S.starScope),p=pct(th,kh),c=pCol(p);
       return `<div class="sk-item"><div class="sk-icon">${k.icon}</div><div class="sk-val" style="color:${c}">${th.toLocaleString('vi-VN')}</div><div class="sk-lbl">${k.lbl}</div><div class="sk-pct" style="color:${c}">${p!==null?p+'%':'—'}</div></div>`;
     }).join('')}</div></div>`
   +'<div class="sec">Bảng xếp hạng</div>'
@@ -1122,7 +1175,7 @@ function renderStar(){
 function renderKH(){
   const el=document.getElementById('khContent');if(!el)return;
   if(S.khTab==='phong'){
-    const kp=gKP(CUR_M);
+    const kp=gKP(S.month);
     el.innerHTML=KPIS.map(k=>`<div class="ff"><div class="ff-hdr">
       <div class="ff-left"><div class="ff-ic" style="background:${k.color}18">${k.icon}</div>
       <div><div class="ff-lbl">${k.star?'★ ':''}${k.lbl}</div><div class="ff-kh">Hiện tại: ${fmt(kp[k.key]||k.kh,k.unit)}</div></div></div></div>
@@ -1144,9 +1197,9 @@ window.saveKHPhong=async function(){
   const data={};
   KPIS.forEach(k=>{const v=document.getElementById('kp-'+k.key)?.value;data[k.key]=parseFloat(v)||k.kh;});
   data._ts=Date.now();
-  const ok=await fbSet(`khPhong/${CUR_M}`,data);
-  if(!S.khPhong[CUR_M])S.khPhong[CUR_M]={};
-  Object.assign(S.khPhong[CUR_M],data);
+  const ok=await fbSet(`khPhong/${S.month}`,data);
+  if(!S.khPhong[S.month])S.khPhong[S.month]={};
+  Object.assign(S.khPhong[S.month],data);
   alert(ok?'✅ Đã lưu KH Phòng!':'❌ Lỗi lưu');
 };
 
@@ -1179,10 +1232,10 @@ window.saveKHTuan=async function(ma,t){
   const data={};
   KPIS.forEach(k=>{const v=document.getElementById(`kt-${t}-${k.key}`)?.value;if(v!==''&&v!=null)data[k.key]=parseFloat(v)||0;});
   data._ts=Date.now();
-  const ok=await fbSet(`khTuan/${CUR_M}/${t}/${ma}`,data);
-  if(!S.khTuan[CUR_M])S.khTuan[CUR_M]={};
-  if(!S.khTuan[CUR_M][t])S.khTuan[CUR_M][t]={};
-  S.khTuan[CUR_M][t][ma]=data;
+  const ok=await fbSet(`khTuan/${S.month}/${t}/${ma}`,data);
+  if(!S.khTuan[S.month])S.khTuan[S.month]={};
+  if(!S.khTuan[S.month][t])S.khTuan[S.month][t]={};
+  S.khTuan[S.month][t][ma]=data;
   alert(ok?`✅ Lưu KH ${t} thành công!`:'❌ Lỗi lưu');
 };
 
@@ -1394,10 +1447,10 @@ function buildZalo(){
   } else {
     const ma=S.zaloNVMa||NVS[0]?.ma;
     const nv=NVS.find(n=>n.ma===ma)||NVS[0];if(!nv)return;
-    const sc2=weightedScore(ma,sc,CUR_M);
+    const sc2=weightedScore(ma,sc,S.month);
     let msg=`📊 KPI ${nv.ten.split(' ').pop()} — ${mLbl} (${scopeLbl})\n${'━'.repeat(22)}\n`;
     KPIS.forEach(k=>{
-      const th=thFor(k,ma,sc,CUR_M),kh=khFor(k,sc),p=pct(th,kh)||0;
+      const th=thFor(k,ma,sc,S.month),kh=khFor(k,sc),p=pct(th,kh)||0;
       msg+=`${pctEmoji(p)}${k.icon} ${k.lbl}: ${th.toLocaleString('vi-VN')}${k.unit} (${p}%)\n`;
     });
     msg+='━'.repeat(22)+'\n';
@@ -1438,6 +1491,15 @@ window.openExport=function(){
   const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);
 };
 
+
+// ── PWA SERVICE WORKER REGISTRATION ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js')
+      .then(r=>console.log('SW registered'))
+      .catch(e=>console.log('SW error',e));
+  });
+}
 </script>
 </body>
 </html>

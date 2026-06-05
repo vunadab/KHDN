@@ -1,74 +1,49 @@
-// ── Service Worker KHDN v1 ──
-// Cache name riêng — tách biệt hoàn toàn với KHCN
-var CACHE_NAME = 'kpi-khdn-v1';
-var ASSETS = [
+// ═══════════════════════════════════════════
+// SERVICE WORKER — KPI KHDN · Nam A Bank
+// Version: 1.0.0
+// Cache: kpi-khdn-v1
+// ═══════════════════════════════════════════
+const CACHE = 'kpi-khdn-v1';
+const ASSETS = [
+  './',
   './index.html',
-  './manifest-khdn.json',
-  './icon-192-khdn.png',
-  './icon-512-khdn.png'
+  'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Mono:wght@400;500;700&display=swap',
 ];
 
-// Install — cache assets
-self.addEventListener('install', function(e) {
+// Install: cache core assets
+self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(ASSETS.filter(function(url) {
-        return !url.includes('icon'); // icon có thể không có → bỏ qua lỗi
-      }));
-    }).catch(function() {})
+    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate — xóa cache cũ của KHDN (không đụng cache KHCN)
-self.addEventListener('activate', function(e) {
+// Activate: clear old caches
+self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(function(keys) {
-      return Promise.all(
-        keys.filter(function(key) {
-          // Chỉ xóa cache KHDN cũ — KHÔNG xóa cache KHCN
-          return key.startsWith('kpi-khdn-') && key !== CACHE_NAME;
-        }).map(function(key) {
-          return caches.delete(key);
-        })
-      );
-    })
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch — network first cho index.html, cache first cho assets
-self.addEventListener('fetch', function(e) {
-  var url = e.request.url;
+// Fetch: network first, fallback to cache
+self.addEventListener('fetch', e => {
+  // Skip Firebase / non-GET requests
+  if (e.request.method !== 'GET') return;
+  if (e.request.url.includes('firebasedatabase') ||
+      e.request.url.includes('firebaseauth') ||
+      e.request.url.includes('googleapis.com/identitytoolkit')) return;
 
-  // index.html: luôn lấy từ network để có code mới nhất
-  if (url.endsWith('index.html') || url.endsWith('/') || url.includes('/KHDN/')) {
-    e.respondWith(
-      fetch(e.request).then(function(res) {
-        var clone = res.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(e.request, clone);
-        });
-        return res;
-      }).catch(function() {
-        return caches.match(e.request);
-      })
-    );
-    return;
-  }
-
-  // Assets khác: cache first
   e.respondWith(
-    caches.match(e.request).then(function(cached) {
-      return cached || fetch(e.request).then(function(res) {
-        var clone = res.clone();
-        caches.open(CACHE_NAME).then(function(cache) {
-          cache.put(e.request, clone);
-        });
+    fetch(e.request)
+      .then(res => {
+        // Cache successful responses for static assets
+        if (res.ok && (e.request.url.includes(self.location.origin) || e.request.url.includes('fonts.googleapis'))) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
         return res;
-      });
-    }).catch(function() {
-      return caches.match('./index.html');
-    })
+      })
+      .catch(() => caches.match(e.request).then(cached => cached || caches.match('./')))
   );
 });

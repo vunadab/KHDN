@@ -1,24 +1,27 @@
 {
-  "name": "KPI KHDN - Nam A Bank",
+  "name": "KPI KHDN · Nam A Bank",
   "short_name": "KPI KHDN",
-  "description": "Quản lý KPI Phòng Khách Hàng Doanh Nghiệp - Nam A Bank",
+  "description": "Hệ thống quản lý KPI Khách hàng Doanh nghiệp - Nam A Bank",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#010810",
-  "theme_color": "#1a6fff",
+  "background_color": "#080c14",
+  "theme_color": "#00d4b4",
   "orientation": "portrait",
+  "scope": "./",
   "icons": [
     {
-      "src": "icon-192-khdn.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512-khdn.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "vi"
 }
