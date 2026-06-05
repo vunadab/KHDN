@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="KPI KHDN">
 <meta name="theme-color" content="#080c14">
 <link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <title>KPI KHDN · Nam A Bank</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -83,6 +85,19 @@ body.light .hdr{background:rgba(240,244,250,.95)}
 .brand-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
 .brand-title em{background:linear-gradient(90deg,var(--teal),var(--teal2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-style:normal}
 .brand-sub{font-size:9px;color:var(--t3);letter-spacing:.07em;text-transform:uppercase}
+/* Month selector row */
+.month-row{display:flex;align-items:center;gap:7px;padding:7px 14px 0;border-top:1px solid var(--line)}
+.month-sel-wrap{position:relative;flex:1}
+.month-sel{width:100%;background:var(--bg2);border:1px solid var(--teal-dim);border-radius:9px;
+  color:var(--teal);font-size:13px;font-weight:700;padding:7px 32px 7px 12px;
+  outline:none;font-family:var(--font);cursor:pointer;appearance:none;-webkit-appearance:none}
+body.light .month-sel{background:var(--bg3)}
+.month-sel-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  pointer-events:none;color:var(--teal);font-size:11px}
+.nv-filter-btn{flex-shrink:0;padding:7px 12px;border-radius:9px;border:1px solid var(--line2);
+  background:var(--bg2);color:var(--t1);font-size:11px;font-weight:600;white-space:nowrap;
+  display:flex;align-items:center;gap:5px}
+body.light .nv-filter-btn{background:var(--bg3)}
 .hdr-right{display:flex;align-items:center;gap:5px;margin-left:auto}
 .ico-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line2);background:transparent;color:var(--t2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .ico-btn:active{background:var(--bg3)}
@@ -157,7 +172,9 @@ body.light .widget{box-shadow:0 2px 10px rgba(0,30,80,.07)}
 .wb{padding:9px 13px 12px}
 .spark-group{margin-bottom:8px}
 .spark-bars{display:flex;gap:3px;align-items:flex-end;height:34px;margin:4px 0 2px}
-.spark-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px}
+.spark-bar{flex:1;border-radius:3px 3px 0 0;min-height:6px;transition:height .5s}
+.spark-bars{position:relative}
+.spark-zero-line{position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--line2)}
 .spark-lbls{display:flex;gap:3px}
 .spark-lbl{flex:1;font-size:7.5px;color:var(--t3);text-align:center;font-weight:600}
 .fc-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--line)}
@@ -349,6 +366,15 @@ body.light .zalo-msg{background:var(--bg3)}
 </div>
 
 <!-- ══ ZALO OVERLAY ══ -->
+<!-- NV FILTER SHEET -->
+<div id="nvfilter-overlay" onclick="if(event.target===this)closeNVFilter()" style="position:fixed;inset:0;background:rgba(8,12,20,.85);z-index:400;display:none;align-items:flex-end;backdrop-filter:blur(10px)">
+  <div style="background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:430px;margin:0 auto;padding:0 0 env(safe-area-inset-bottom,16px);border-top:1px solid var(--line2)">
+    <div style="width:34px;height:4px;background:var(--line2);border-radius:2px;margin:10px auto 0"></div>
+    <div style="font-size:14px;font-weight:800;padding:13px 16px 6px">👥 Chọn nhân viên</div>
+    <div id="nvFilterList" style="padding:0 12px 16px"></div>
+  </div>
+</div>
+
 <div id="zalo-overlay" onclick="if(event.target===this)closeZalo()">
   <div class="zalo-sheet">
     <div class="zalo-handle"></div>
@@ -407,11 +433,20 @@ body.light .zalo-msg{background:var(--bg3)}
     <span class="badge" style="background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-dim)" id="badgeMonth"></span>
     <span class="badge" style="background:var(--bg3);color:var(--t2);border:1px solid var(--line2)" id="badgeTuan"></span>
     <span class="badge" style="background:var(--bg3);color:var(--t3);border:1px solid var(--line)" id="badgeDate"></span>
-    <span style="flex-shrink:0">
-      <select id="monthSelect" onchange="changeMonth(this.value)" style="background:var(--bg3);color:var(--teal);border:1px solid var(--teal-dim);border-radius:6px;padding:3px 6px;font-size:10px;font-weight:700;outline:none;font-family:var(--font);cursor:pointer;-webkit-appearance:none;min-width:60px">
-      </select>
-    </span>
+
     <span class="badge" style="background:rgba(244,63,94,.08);color:var(--red);border:1px solid rgba(244,63,94,.2)" id="alertBadge" style="display:none"></span>
+  </div>
+  <!-- Month selector + NV filter row -->
+  <div class="month-row">
+    <div class="month-sel-wrap">
+      <select id="monthSelect" class="month-sel" onchange="changeMonth(this.value)"></select>
+      <span class="month-sel-arrow">▾</span>
+    </div>
+    <button class="nv-filter-btn" id="nvFilterBtn" onclick="openNVFilter()">
+      <span style="font-size:15px">👥</span>
+      <span id="nvFilterLabel">Toàn phòng</span>
+      <span style="color:var(--t3);font-size:12px">▾</span>
+    </button>
   </div>
 </header>
 
@@ -584,7 +619,7 @@ const CUR_T = (()=>{ const d=new Date().getDate(); return d<=7?'T1':d<=14?'T2':d
 // STATE
 // ════════════════════════════════════════════
 const S = {
-  tab:'dash', scope:'thang', tuan:CUR_T, month:CUR_M,
+  tab:'dash', scope:'thang', tuan:CUR_T, month:CUR_M, filterNV:null,
   plTab:'nv', plNV:null, editDealId:null,
   starScope:'thang', khTab:'phong',
   dark:true, pinOk:false, pendingTab:null,
@@ -659,6 +694,8 @@ onAuthStateChanged(auth, async user => {
     ];
     updateHeader();
     renderDash(); renderNhap(); renderPipeline(); renderStar(); renderAlerts();
+    // Update NV filter button label
+    document.getElementById('nvFilterLabel').textContent='Toàn phòng ('+NVS.length+' NV)';
   } else {
     document.getElementById('login-screen').style.display='flex';
   }
@@ -745,6 +782,29 @@ function buildMonthSelect(){
   sel.innerHTML=opts.join('');
 }
 
+window.openNVFilter=function(){
+  const el=document.getElementById('nvFilterList');if(!el)return;
+  const items=[{ma:null,ten:'Toàn phòng',col:'var(--teal)',icon:'👥'},...NVS];
+  el.innerHTML=items.map(item=>{
+    const sel=S.filterNV===item.ma;
+    return `<div onclick="setNVFilter('${item.ma}')" style="display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:11px;margin-bottom:6px;cursor:pointer;background:${sel?'var(--teal-bg)':'var(--bg3)'};border:1px solid ${sel?'var(--teal-dim)':'var(--line)'}">
+      ${item.ma?`<div style="width:34px;height:34px;border-radius:9px;background:${item.col}18;color:${item.col};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">${item.ten.split(' ').pop()[0]}</div>`
+              :`<div style="width:34px;height:34px;border-radius:9px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👥</div>`}
+      <div style="flex:1;font-size:13px;font-weight:700">${item.ten}</div>
+      ${sel?'<span style="color:var(--teal);font-size:16px">✓</span>':''}
+    </div>`;
+  }).join('');
+  document.getElementById('nvfilter-overlay').style.display='flex';
+};
+window.closeNVFilter=function(){ document.getElementById('nvfilter-overlay').style.display='none'; };
+window.setNVFilter=function(ma){
+  S.filterNV=ma==='null'?null:ma;
+  const lbl=ma==='null'||ma===null?'Toàn phòng':NVS.find(n=>n.ma===ma)?.ten.split(' ').slice(-2).join(' ')||'Toàn phòng';
+  document.getElementById('nvFilterLabel').textContent=lbl;
+  closeNVFilter();
+  renderDash();
+};
+
 window.changeMonth=async function(m){
   S.month=m;
   // Load data cho tháng mới nếu chưa có
@@ -815,7 +875,8 @@ function thFor(k,ma,sc,m){
   return tuans.reduce((s,t)=>s+(gTH(m,t,ma)[k.key]||0),0);
 }
 function thForAll(k,sc,m){
-  return NVS.reduce((s,nv)=>s+thFor(k,nv.ma,sc,m),0);
+  const list=S.filterNV?NVS.filter(nv=>nv.ma===S.filterNV):NVS;
+  return list.reduce((s,nv)=>s+thFor(k,nv.ma,sc,m),0);
 }
 function weightedScore(ma,sc,m){
   const stars=KPIS.filter(k=>k.star);
@@ -866,7 +927,14 @@ function renderDash(){
     const mx=Math.max(...wkVals,1);
     return `<div class="spark-group">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-size:11px">${k.icon}</span><span style="font-size:11px;font-weight:700">${k.lbl}</span></div>
-      <div class="spark-bars">${wkVals.map(v=>{const p2=pct(v,Math.round(k.kh/4)),h=Math.max(4,v/mx*100),c=pCol(p2);return `<div class="spark-bar" style="height:${h}%;background:${c}55;border-top:2px solid ${c}"></div>`;}).join('')}</div>
+      <div class="spark-bars" style="position:relative">
+        <div class="spark-zero-line"></div>
+        ${wkVals.map((v,i)=>{const p2=pct(v,Math.round(k.kh/4)),h=Math.max(8,v/mx*90),c=pCol(p2);
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0">
+            <div style="font-size:8px;font-weight:800;color:${c};margin-bottom:2px;text-align:center">${p2!==null?p2+'%':''}</div>
+            <div class="spark-bar" style="width:100%;height:${h}%;background:${c}cc;border-top:2.5px solid ${c}"></div>
+          </div>`;}).join('')}
+      </div>
       <div class="spark-lbls">${['T1','T2','T3','T4'].map(t=>`<div class="spark-lbl">${t}</div>`).join('')}</div></div>`;
   }).join('');
   // Forecast (pipeline giá trị)

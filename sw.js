@@ -1,49 +1,77 @@
 // ═══════════════════════════════════════════
 // SERVICE WORKER — KPI KHDN · Nam A Bank
-// Version: 1.0.0
-// Cache: kpi-khdn-v1
+// Cache name: kpi-khdn-v2
 // ═══════════════════════════════════════════
-const CACHE = 'kpi-khdn-v1';
-const ASSETS = [
+const CACHE_NAME = 'kpi-khdn-v2';
+
+// Core files to precache
+const PRECACHE = [
   './',
   './index.html',
-  'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Mono:wght@400;500;700&display=swap',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
-// Install: cache core assets
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+// ── INSTALL: precache app shell ──
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE.map(u => new Request(u, {cache:'reload'}))))
+      .then(() => self.skipWaiting())
+      .catch(err => console.warn('[SW] Precache partial fail:', err))
   );
 });
 
-// Activate: clear old caches
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+// ── ACTIVATE: delete old caches ──
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch: network first, fallback to cache
-self.addEventListener('fetch', e => {
-  // Skip Firebase / non-GET requests
-  if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('firebasedatabase') ||
-      e.request.url.includes('firebaseauth') ||
-      e.request.url.includes('googleapis.com/identitytoolkit')) return;
+// ── FETCH: network-first for Firebase, cache-first for assets ──
+self.addEventListener('fetch', event => {
+  const url = event.request.url;
 
-  e.respondWith(
-    fetch(e.request)
+  // Skip non-GET and Firebase/auth requests entirely
+  if (event.request.method !== 'GET') return;
+  if (url.includes('firebasedatabase.app') ||
+      url.includes('firebaseapp.com') ||
+      url.includes('googleapis.com/identitytoolkit') ||
+      url.includes('securetoken.google.com') ||
+      url.includes('chrome-extension')) return;
+
+  // Google Fonts — cache first
+  if (url.includes('fonts.googleapis.com') || url.includes('fonts.gstatic.com')) {
+    event.respondWith(
+      caches.match(event.request).then(cached => {
+        if (cached) return cached;
+        return fetch(event.request).then(res => {
+          if (res.ok) caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone()));
+          return res;
+        }).catch(() => cached);
+      })
+    );
+    return;
+  }
+
+  // App files — network first, fallback to cache
+  event.respondWith(
+    fetch(event.request)
       .then(res => {
-        // Cache successful responses for static assets
-        if (res.ok && (e.request.url.includes(self.location.origin) || e.request.url.includes('fonts.googleapis'))) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+        if (res.ok && url.startsWith(self.location.origin)) {
+          caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone()));
         }
         return res;
       })
-      .catch(() => caches.match(e.request).then(cached => cached || caches.match('./')))
+      .catch(() =>
+        caches.match(event.request)
+          .then(cached => cached || caches.match('./index.html'))
+      )
   );
 });
